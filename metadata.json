@@ -1,0 +1,6 @@
+{
+  "name": "MedLink International - Jordan & Germany Medical Portal",
+  "description": "Cross-border telemedicine and specialist consultation portal connecting patients and doctors between Jordan and Germany.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
