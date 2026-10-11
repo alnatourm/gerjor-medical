@@ -81,7 +81,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
       setCaptions(prev => [
         ...prev,
         {
-          sender: 'You (Patient)',
+          sender: currentLang === 'ar' ? 'أنت (المريض)' : (currentLang === 'de' ? 'Sie (Patient)' : 'You (Patient)'),
           original: userText,
           translatedAr: translations.ar || userText,
           translatedDe: translations.de || userText,
@@ -106,9 +106,9 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-base">MedLink Encrypted Telehealth Room</span>
+                <span className="font-bold text-white text-base">{t.telehealthRoomTitle}</span>
                 <span className="bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[10px] font-bold px-2 py-0.5 rounded">
-                  256-bit Encrypted
+                  {t.encrypted256}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -159,7 +159,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
 
                 <div className="bg-teal-950/80 border border-teal-800 text-teal-300 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-                  <span>Real-Time AI Translator Active</span>
+                  <span>{t.realtimeAiTranslatorActive}</span>
                 </div>
               </div>
 
@@ -171,11 +171,11 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   </div>
                   <div>
                     <span className="text-base font-bold text-white block">Prof. Dr. med. Sabine Weber</span>
-                    <span className="text-xs text-slate-400">HD Encrypted Medical Video Stream</span>
+                    <span className="text-xs text-slate-400">{t.hdEncryptedStream}</span>
                   </div>
                   <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Doctor Connected (Berlin, Germany)</span>
+                    <span>{t.doctorConnectedBerlin}</span>
                   </div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   OA
                 </div>
                 <span className="text-[10px] font-bold text-slate-200">Omar (Patient)</span>
-                <span className="text-[9px] text-teal-400">Amman, Jordan 🇯🇴</span>
+                <span className="text-[9px] text-teal-400">{t.patientLocationAmman}</span>
               </div>
 
               {/* Bottom Controls Bar */}
@@ -196,7 +196,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   className={`p-3 rounded-xl transition-all ${
                     isMicOn ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-600 text-white'
                   }`}
-                  title="Toggle Microphone"
+                  title={t.toggleMic}
                 >
                   {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                 </button>
@@ -206,7 +206,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   className={`p-3 rounded-xl transition-all ${
                     isVideoOn ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-600 text-white'
                   }`}
-                  title="Toggle Camera"
+                  title={t.toggleCamera}
                 >
                   {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                 </button>
@@ -218,7 +218,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   }`}
                 >
                   <Globe className="w-4 h-4" />
-                  <span>AI Subtitles ({isTranslating ? 'ON' : 'OFF'})</span>
+                  <span>{t.aiSubtitlesBtn} ({isTranslating ? 'ON' : 'OFF'})</span>
                 </button>
               </div>
 
@@ -231,7 +231,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   <span className="font-bold text-teal-400 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4" /> {t.captionNotice}
                   </span>
-                  <span>Active Language View: <strong className="text-white uppercase">{currentLang}</strong></span>
+                  <span>{t.activeLangView}: <strong className="text-white uppercase">{currentLang}</strong></span>
                 </div>
 
                 <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
@@ -245,7 +245,7 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                         {currentLang === 'ar' ? cap.translatedAr : (currentLang === 'de' ? cap.translatedDe : cap.translatedEn)}
                       </p>
                       <p className="text-[10px] text-slate-500 italic">
-                        Original: "{cap.original}"
+                        {t.originalLabel}: "{cap.original}"
                       </p>
                     </div>
                   ))}
@@ -265,156 +265,110 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
                   onClick={() => setActiveSideTab('captions')}
                   className={`py-1.5 rounded-lg transition-colors ${activeSideTab === 'captions' ? 'bg-teal-600 text-white' : 'hover:text-white'}`}
                 >
-                  Subtitles
+                  {t.subtitlesTab}
                 </button>
                 <button
                   onClick={() => setActiveSideTab('notes')}
                   className={`py-1.5 rounded-lg transition-colors ${activeSideTab === 'notes' ? 'bg-teal-600 text-white' : 'hover:text-white'}`}
                 >
-                  Notes
+                  {t.notesTab}
                 </button>
                 <button
                   onClick={() => setActiveSideTab('records')}
                   className={`py-1.5 rounded-lg transition-colors ${activeSideTab === 'records' ? 'bg-teal-600 text-white' : 'hover:text-white'}`}
                 >
-                  MRIs/Labs
+                  {t.mriLabsTab}
                 </button>
                 <button
                   onClick={() => setActiveSideTab('prescription')}
                   className={`py-1.5 rounded-lg transition-colors ${activeSideTab === 'prescription' ? 'bg-teal-600 text-white' : 'hover:text-white'}`}
                 >
-                  E-Prescription
+                  {t.eprescriptionTab}
                 </button>
               </div>
 
               {/* TAB 1: Chat & Translation Input */}
               {activeSideTab === 'captions' && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Trilingual Medical Chat</h4>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.trilingualChatHeader}</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Messages are instantly translated into Arabic, German, and English using Gemini 3.8 Flash.
+                    {t.trilingualChatDesc}
                   </p>
 
                   <form onSubmit={handleSendMessage} className="space-y-2 pt-2">
                     <textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type a message or clinical question..."
+                      placeholder={t.typeMessagePlaceholder}
                       rows={3}
-                      className="w-full bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 focus:outline-none focus:border-teal-500"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
                     />
                     <button
                       type="submit"
-                      disabled={isSendingMessage}
-                      className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                      disabled={isSendingMessage || !newMessage.trim()}
+                      className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>Send & Translate</span>
+                      <span>{t.sendBtn}</span>
                     </button>
                   </form>
                 </div>
               )}
 
-              {/* TAB 2: Clinical Doctor Notes */}
+              {/* TAB 2: Live Clinical Notes */}
               {activeSideTab === 'notes' && (
-                <div className="space-y-3 text-xs">
-                  <h4 className="font-bold text-slate-200">Doctor's Live Consultation Assessment</h4>
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-slate-300 leading-relaxed">
-                    <p><strong>Diagnosis:</strong> Benign Tension-type Vascular Headache with ocular strain.</p>
-                    <p><strong>Key Findings:</strong> Brain MRI contrast scan confirms absence of space-occupying lesion or acute vascular malformation.</p>
-                    <p><strong>Plan:</strong> Initiating low-dose Topiramate prophylactic regimen. Follow-up in 6 weeks.</p>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.doctorNotes}</h4>
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-2 text-slate-300">
+                    <p>• Patient presents with recurrent tension headache (duration: 3 weeks).</p>
+                    <p>• Amman MRI scan evaluated: No intracranial lesions, ventricular size within normal limits.</p>
+                    <p>• Recommendation: Conservative management, prophylactic Topiramate therapy.</p>
                   </div>
                 </div>
               )}
 
-              {/* TAB 3: Uploaded MRIs & Lab Diagnostic Viewer */}
+              {/* TAB 3: Diagnostic Viewer */}
               {activeSideTab === 'records' && (
-                <div className="space-y-3 text-xs">
-                  <h4 className="font-bold text-slate-200">Attached Patient Records</h4>
-                  <div className="space-y-2">
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-teal-400" />
-                        <div>
-                          <span className="font-bold text-white block">Brain_MRI_Sept2026.pdf</span>
-                          <span className="text-[10px] text-slate-400">14.2 MB · Uploaded by Patient</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Reviewed</span>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.medicalViewer}</h4>
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
+                    <div className="flex items-center justify-between text-slate-300">
+                      <span className="font-bold text-white">Amman Brain MRI (DICOM)</span>
+                      <span className="text-[10px] text-teal-400">PDF / DICOM</span>
                     </div>
-
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-teal-400" />
-                        <div>
-                          <span className="font-bold text-white block">Echocardiogram_Report.pdf</span>
-                          <span className="text-[10px] text-slate-400">3.8 MB · Amman Specialty Hospital</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Reviewed</span>
-                    </div>
+                    <p className="text-[11px] text-slate-400">Uploaded 3 days ago · ABDALI HOSPITAL AMMAN</p>
+                    <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Open Fullscreen Viewer</span>
+                    </button>
                   </div>
                 </div>
               )}
 
               {/* TAB 4: Digital E-Prescription */}
               {activeSideTab === 'prescription' && (
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-200">Cross-Border E-Prescription</h4>
-                    <span className="text-[10px] text-teal-300 bg-teal-950 px-2 py-0.5 rounded border border-teal-800">Valid in JO & DE</span>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.eprescriptionTab}</h4>
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-3 text-xs">
+                    {rxMeds.map((med, i) => (
+                      <div key={i} className="border-b border-slate-800 pb-2">
+                        <span className="font-bold text-white block">{med.name} ({med.dosage})</span>
+                        <span className="text-slate-400 text-[11px] block">{med.frequency} · {med.duration}</span>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setRxIssued(true)}
+                      className={`w-full py-2 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 ${
+                        rxIssued ? 'bg-emerald-600 text-white' : 'bg-teal-600 hover:bg-teal-500 text-white'
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>{rxIssued ? 'Prescription Issued & Signed ✓' : 'Issue Official Cross-Border Prescription'}</span>
+                    </button>
                   </div>
-
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-3 text-slate-300">
-                    <div className="text-[11px] font-bold text-teal-400 border-b border-slate-800 pb-1">
-                      Rx Prescribed Medications
-                    </div>
-
-                    <div className="space-y-2">
-                      {rxMeds.map((med, i) => (
-                        <div key={i} className="bg-slate-900 p-2 rounded-lg border border-slate-800 space-y-0.5">
-                          <span className="font-bold text-white block">{med.name} ({med.dosage})</span>
-                          <span className="text-[10px] text-slate-400 block">{med.frequency} · {med.duration}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div>
-                      <span className="font-bold text-slate-400 text-[10px] uppercase block">Special Instructions</span>
-                      <p className="text-[11px] text-slate-300">{rxNotes}</p>
-                    </div>
-
-                    <div className="text-[10px] text-slate-500 border-t border-slate-800 pt-2 flex items-center justify-between">
-                      <span>Digitally Signed: Prof. Dr. Sabine Weber</span>
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setRxIssued(true)}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                  >
-                    {rxIssued ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>Prescription Generated & Vault Saved</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4" />
-                        <span>Generate & Save Prescription PDF</span>
-                      </>
-                    )}
-                  </button>
                 </div>
               )}
 
-            </div>
-
-            {/* Bottom Hospital Trust Marker */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-teal-400 shrink-0" />
-              <span>Session recorded & securely archived in compliance with EU GDPR & Jordan Medical Privacy Regulations.</span>
             </div>
 
           </div>

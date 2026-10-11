@@ -1,6 +1,6 @@
-import React from 'react';
-import { Globe, ShieldCheck, Stethoscope, Video, User, Heart, ChevronDown } from 'lucide-react';
-import { CountryCode, LanguageCode, CurrencyCode } from '../types';
+import React, { useState } from 'react';
+import { Globe, ShieldCheck, Stethoscope, Video, User, Heart, ChevronDown, LogIn, LogOut, UserCheck } from 'lucide-react';
+import { CountryCode, LanguageCode, CurrencyCode, UserAccount } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
 
 interface HeaderProps {
@@ -13,6 +13,9 @@ interface HeaderProps {
   currentCurrency: CurrencyCode;
   setCurrentCurrency: (currency: CurrencyCode) => void;
   onOpenAiAssistant: () => void;
+  currentUser: UserAccount | null;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,10 +27,14 @@ export const Header: React.FC<HeaderProps> = ({
   setCurrentLang,
   currentCurrency,
   setCurrentCurrency,
-  onOpenAiAssistant
+  onOpenAiAssistant,
+  currentUser,
+  onOpenAuthModal,
+  onSignOut
 }) => {
   const t = TRANSLATIONS[currentLang];
   const isRtl = currentLang === 'ar';
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-md">
@@ -82,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        {/* Zone 2: Navigation Links */}
+        {/* Zone 2: Navigation Links based on User Role */}
         <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-slate-300">
           <button
             onClick={() => setCurrentTab('home')}
@@ -92,34 +99,82 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {t.home}
           </button>
-          <button
-            onClick={() => setCurrentTab('dashboard')}
-            className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
-              currentTab === 'dashboard' ? 'bg-slate-800 text-teal-400 font-semibold' : 'hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            {t.myConsultations}
-          </button>
-          <button
-            onClick={() => setCurrentTab('virtual-clinic')}
-            className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              currentTab === 'virtual-clinic' ? 'bg-teal-600 text-white font-semibold' : 'hover:text-white hover:bg-slate-800/50 text-teal-300'
-            }`}
-          >
-            <Video className="w-4 h-4" />
-            {t.virtualClinic}
-          </button>
-          <button
-            onClick={() => setCurrentTab('travel-guide')}
-            className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
-              currentTab === 'travel-guide' ? 'bg-slate-800 text-teal-400 font-semibold' : 'hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            {t.travelVisa}
-          </button>
+
+          {currentUser?.role === 'doctor' ? (
+            /* DOCTOR SPECIFIC NAVBAR LINKS */
+            <>
+              <button
+                onClick={() => setCurrentTab('doctor-profile')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  currentTab === 'doctor-profile' ? 'bg-sky-700 text-white font-bold' : 'bg-sky-950/80 text-sky-300 hover:text-white hover:bg-sky-900/60 border border-sky-800/60'
+                }`}
+              >
+                <User className="w-4 h-4 text-sky-400" />
+                <span>{t.doctorProfile}</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('doctor-portal')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  currentTab === 'doctor-portal' ? 'bg-teal-700 text-white font-bold' : 'bg-teal-950/80 text-teal-300 hover:text-white hover:bg-teal-900/60 border border-teal-800/60'
+                }`}
+              >
+                <Stethoscope className="w-4 h-4 text-teal-400" />
+                <span>{t.doctorPortal}</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('virtual-clinic')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  currentTab === 'virtual-clinic' ? 'bg-teal-600 text-white font-semibold' : 'hover:text-white hover:bg-slate-800/50 text-teal-300'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                <span>{t.liveVideoRoom}</span>
+              </button>
+            </>
+          ) : (
+            /* PATIENT SPECIFIC NAVBAR LINKS */
+            <>
+              <button
+                onClick={() => setCurrentTab('dashboard')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  currentTab === 'dashboard' ? 'bg-slate-800 text-teal-400 font-semibold' : 'hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                {t.myConsultations}
+              </button>
+              <button
+                onClick={() => setCurrentTab('profile-settings')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  currentTab === 'profile-settings' ? 'bg-slate-800 text-teal-400 font-semibold' : 'hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <User className="w-4 h-4 text-teal-400" />
+                <span>{t.patientProfile}</span>
+              </button>
+              <button
+                onClick={() => setCurrentTab('virtual-clinic')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  currentTab === 'virtual-clinic' ? 'bg-teal-600 text-white font-semibold' : 'hover:text-white hover:bg-slate-800/50 text-teal-300'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                {t.virtualClinic}
+              </button>
+              <button
+                onClick={() => setCurrentTab('travel-guide')}
+                className={`px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  currentTab === 'travel-guide' ? 'bg-slate-800 text-teal-400 font-semibold' : 'hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                {t.travelVisa}
+              </button>
+            </>
+          )}
         </nav>
 
-        {/* Zone 3: Country, Language, Currency Controls & Primary Action */}
+        {/* Zone 3: Country, Language, Currency Controls & Account Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
           
           {/* Country Selector */}
@@ -162,6 +217,129 @@ export const Header: React.FC<HeaderProps> = ({
               <option value="USD">USD ($)</option>
             </select>
           </div>
+
+          {/* User Account / Auth Button */}
+          {currentUser && currentUser.isAuthenticated ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm border ${
+                  currentUser.role === 'doctor'
+                    ? 'bg-sky-950 border-sky-500/80 text-sky-200 hover:text-white'
+                    : 'bg-teal-950 border-teal-600/80 text-teal-200 hover:text-white'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-extrabold text-[11px] text-white ${
+                  currentUser.role === 'doctor' ? 'bg-sky-600' : 'bg-teal-600'
+                }`}>
+                  {currentUser.fullName.charAt(0)}
+                </div>
+                <div className="text-left hidden sm:block max-w-[120px] truncate">
+                  <span className="block truncate leading-none">{currentUser.fullName}</span>
+                  <span className="text-[9px] text-teal-400 font-mono">
+                    {currentUser.role === 'doctor' ? `👨‍⚕️ ${t.rolePhysician}` : `👤 ${t.rolePatient}`}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-teal-400" />
+              </button>
+
+              {/* Account Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs space-y-1 animate-fade-in">
+                  <div className="px-3 py-2 border-b border-slate-800">
+                    <span className="font-bold text-white block truncate">{currentUser.fullName}</span>
+                    <span className="text-[10px] text-teal-400 block truncate">{currentUser.email}</span>
+                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wide block mt-1">
+                      {currentUser.role === 'doctor' ? t.crossBorderSpecialist : t.rolePatient}
+                    </span>
+                  </div>
+
+                  {currentUser.role === 'doctor' ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setCurrentTab('doctor-profile');
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 font-medium"
+                      >
+                        <User className="w-4 h-4 text-sky-400" />
+                        <span>{t.doctorProfile}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setCurrentTab('doctor-portal');
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 font-medium"
+                      >
+                        <Stethoscope className="w-4 h-4 text-teal-400" />
+                        <span>{t.doctorPortal}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setCurrentTab('virtual-clinic');
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 font-medium"
+                      >
+                        <Video className="w-4 h-4 text-teal-400" />
+                        <span>{t.virtualConsultationRoom}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setCurrentTab('profile-settings');
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 font-medium"
+                      >
+                        <User className="w-4 h-4 text-teal-400" />
+                        <span>{t.patientProfile}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setCurrentTab('dashboard');
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 font-medium"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-teal-400" />
+                        <span>{t.myConsultationsAndVault}</span>
+                      </button>
+                    </>
+                  )}
+
+                  <div className="border-t border-slate-800 pt-1">
+                    <button
+                      onClick={() => {
+                        onSignOut();
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 flex items-center gap-2 font-semibold"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>{t.signOut}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuthModal}
+              className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>{t.signInRegister}</span>
+            </button>
+          )}
+
         </div>
       </div>
 
@@ -180,18 +358,19 @@ export const Header: React.FC<HeaderProps> = ({
           {t.myConsultations}
         </button>
         <button
+          onClick={() => setCurrentTab('profile-settings')}
+          className={`px-3 py-1 rounded-md ${currentTab === 'profile-settings' ? 'bg-slate-900 text-teal-400 font-bold' : ''}`}
+        >
+          {t.patientProfile}
+        </button>
+        <button
           onClick={() => setCurrentTab('virtual-clinic')}
           className={`px-3 py-1 rounded-md text-teal-300 ${currentTab === 'virtual-clinic' ? 'bg-teal-700 text-white font-bold' : ''}`}
         >
           {t.virtualClinic}
         </button>
-        <button
-          onClick={() => setCurrentTab('travel-guide')}
-          className={`px-3 py-1 rounded-md ${currentTab === 'travel-guide' ? 'bg-slate-900 text-teal-400 font-bold' : ''}`}
-        >
-          {t.travelVisa}
-        </button>
       </div>
     </header>
   );
 };
+

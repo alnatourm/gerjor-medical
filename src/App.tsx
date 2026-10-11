@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CountryCode, LanguageCode, CurrencyCode, Doctor, Appointment, MedicalRecord, ConsultationType, Specialty, PatientProfile } from './types';
+import { CountryCode, LanguageCode, CurrencyCode, Doctor, Appointment, MedicalRecord, ConsultationType, Specialty, PatientProfile, UserAccount } from './types';
 import { MOCK_DOCTORS, MOCK_APPOINTMENTS, MOCK_RECORDS } from './data/mockData';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -10,14 +10,30 @@ import { ProfileSettings } from './components/ProfileSettings';
 import { CountrySelectionFlow } from './components/CountrySelectionFlow';
 import { MedicalTravelGuide } from './components/MedicalTravelGuide';
 import { AiSymptomAssistant } from './components/AiSymptomAssistant';
+import { DoctorPortal } from './components/DoctorPortal';
+import { DoctorProfilePage } from './components/DoctorProfilePage';
+import { AuthModal } from './components/AuthModal';
 import { Footer } from './components/Footer';
-import { Upload, X, Check, FileText } from 'lucide-react';
+import { Upload, X, Check, FileText, Sparkles, Loader2, ScanLine, CheckCircle2, Camera, FlaskConical } from 'lucide-react';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>('ALL');
   const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
   const [currentCurrency, setCurrentCurrency] = useState<CurrencyCode>('EUR');
+
+  // Authenticated User State
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>({
+    id: 'usr-patient-1',
+    fullName: 'Omar Al-Masmoudi',
+    email: 'omar.masmoudi@example.com',
+    phone: '+962 7 9123 4567',
+    role: 'patient',
+    country: 'JO',
+    preferredLanguage: 'en',
+    isAuthenticated: true
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   // Patient Profile State
   const [patientProfile, setPatientProfile] = useState<PatientProfile>({
@@ -103,12 +119,57 @@ export default function App() {
 
   // Upload Record State
   const [newRecTitle, setNewRecTitle] = useState('');
-  const [newRecType, setNewRecType] = useState<'Lab Result' | 'MRI/CT Scan' | 'Prescription'>('MRI/CT Scan');
+  const [newRecType, setNewRecType] = useState<'Lab Result' | 'Doctor Report' | 'Photo / Scan' | 'MRI/CT Scan' | 'Prescription'>('Lab Result');
   const [newRecNotes, setNewRecNotes] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [uploadedFileSize, setUploadedFileSize] = useState('');
   const [uploadedFileType, setUploadedFileType] = useState<'image' | 'pdf' | 'dicom' | 'other' | null>(null);
   const [uploadedFilePreviewUrl, setUploadedFilePreviewUrl] = useState<string | null>(null);
+  const [uploadedFileObj, setUploadedFileObj] = useState<File | null>(null);
+
+  // AI OCR State
+  const [isOcrScanning, setIsOcrScanning] = useState<boolean>(false);
+  const [ocrSuccessMessage, setOcrSuccessMessage] = useState<string | null>(null);
+
+  // Run AI OCR on uploaded file
+  const runOcrOnSelectedFile = async (fileToScan?: File) => {
+    const targetFile = fileToScan || uploadedFileObj;
+    setIsOcrScanning(true);
+    setOcrSuccessMessage(null);
+
+    try {
+      let base64Image = '';
+      let mimeType = targetFile?.type || 'image/jpeg';
+      let fileName = targetFile?.name || uploadedFileName || 'Medical Report';
+
+      if (targetFile) {
+        base64Image = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const res = reader.result as string;
+            resolve(res.includes(',') ? res.split(',')[1] : res);
+          };
+          reader.readAsDataURL(targetFile);
+        });
+      }
+
+      const response = await fetch('/api/ai/ocr-parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Image, mimeType, fileName })
+      });
+
+      const data = await response.json();
+      if (data.extractedNotes) {
+        setNewRecNotes(data.extractedNotes);
+        setOcrSuccessMessage('✨ Text automatically parsed & extracted from document by Gemini AI OCR!');
+      }
+    } catch (err) {
+      console.error('OCR Error:', err);
+    } finally {
+      setIsOcrScanning(false);
+    }
+  };
 
   const handleSaveUploadedRecord = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +194,8 @@ export default function App() {
     setUploadedFileSize('');
     setUploadedFileType(null);
     setUploadedFilePreviewUrl(null);
+    setUploadedFileObj(null);
+    setOcrSuccessMessage(null);
   };
 
   return (
@@ -149,6 +212,9 @@ export default function App() {
         currentCurrency={currentCurrency}
         setCurrentCurrency={setCurrentCurrency}
         onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onSignOut={() => setCurrentUser(null)}
       />
 
       {/* Main View Router */}
@@ -206,6 +272,41 @@ export default function App() {
           </div>
         )}
 
+        {currentTab === 'doctor-profile' && (
+          <DoctorProfilePage
+            currentUser={currentUser}
+            currentLang={currentLang}
+            currentCurrency={currentCurrency}
+            doctors={doctors}
+            onUpdateDoctor={(updatedDoc) => {
+              setDoctors(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+            }}
+            onNavigateToPortal={() => setCurrentTab('doctor-portal')}
+          />
+        )}
+
+        {currentTab === 'doctor-portal' && (
+          <DoctorPortal
+            currentUser={currentUser}
+            currentLang={currentLang}
+            currentCurrency={currentCurrency}
+            appointments={appointments}
+            records={records}
+            doctors={doctors}
+            onOpenVirtualClinic={(app) => {
+              setActiveClinicAppointment(app);
+              setCurrentTab('virtual-clinic');
+            }}
+            onIssuePrescription={(appId, newPrescription) => {
+              setAppointments(prev => prev.map(a => a.id === appId ? { ...a, prescription: newPrescription } : a));
+            }}
+            onAddRecordToPatientVault={(newRecord) => {
+              setRecords(prev => [newRecord, ...prev]);
+            }}
+            onOpenDoctorProfile={() => setCurrentTab('doctor-profile')}
+          />
+        )}
+
         {currentTab === 'virtual-clinic' && (
           <VirtualClinic
             currentLang={currentLang}
@@ -261,54 +362,147 @@ export default function App() {
               <span>Upload Medical Document / MRI</span>
             </div>
 
-            <form onSubmit={handleSaveUploadedRecord} className="space-y-3 text-xs">
+            <form onSubmit={handleSaveUploadedRecord} className="space-y-3.5 text-xs">
+              {/* Document Category Selection Pills */}
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1.5">1. Select Document Category:</label>
+                <div className="grid grid-cols-3 gap-1.5 font-semibold text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setNewRecType('Lab Result')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      newRecType === 'Lab Result'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20 font-bold shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FlaskConical className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="truncate">🧪 Lab Report</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewRecType('Doctor Report')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      newRecType === 'Doctor Report'
+                        ? 'bg-sky-50 border-sky-500 text-sky-800 ring-2 ring-sky-500/20 font-bold shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span className="truncate">🩺 Doctor Report</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewRecType('Photo / Scan')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      newRecType === 'Photo / Scan'
+                        ? 'bg-purple-50 border-purple-500 text-purple-800 ring-2 ring-purple-500/20 font-bold shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Camera className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span className="truncate">📷 Upload Photo</span>
+                  </button>
+                </div>
+              </div>
+
               {/* File Upload Attachment Input Box & Preview Card */}
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Attach File / Medical Record</label>
+                <label className="font-semibold text-slate-700 block mb-1">2. Attach File or Photo:</label>
                 
                 {!uploadedFileName ? (
-                  <div className="border-2 border-dashed border-teal-200 rounded-xl p-3.5 text-center bg-teal-50/50 hover:bg-teal-50 transition-colors">
-                    <Upload className="w-6 h-6 text-teal-600 mx-auto mb-1" />
-                    <span className="text-xs font-bold text-slate-800 block">Select DICOM, MRI, CT Scan, or PDF</span>
-                    <span className="text-[10px] text-slate-500 block mb-2">Supported files: PDF, JPG, PNG, DICOM (Up to 50MB)</span>
+                  <div className="border-2 border-dashed border-teal-200 rounded-2xl p-4 text-center bg-teal-50/40 hover:bg-teal-50 transition-colors space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      {newRecType === 'Lab Result' && <FlaskConical className="w-6 h-6 text-emerald-600" />}
+                      {newRecType === 'Doctor Report' && <FileText className="w-6 h-6 text-sky-600" />}
+                      {newRecType === 'Photo / Scan' && <Camera className="w-6 h-6 text-purple-600" />}
+                      {newRecType === 'MRI/CT Scan' && <Upload className="w-6 h-6 text-teal-600" />}
+                    </div>
+
+                    <span className="text-xs font-bold text-slate-800 block">
+                      {newRecType === 'Lab Result' && 'Upload Lab Results / Blood Work / Pathology Report'}
+                      {newRecType === 'Doctor Report' && 'Upload Doctor Report / Clinical Diagnosis Note'}
+                      {newRecType === 'Photo / Scan' && 'Upload Photo of Medical Report, Symptoms or Prescription'}
+                      {newRecType === 'MRI/CT Scan' && 'Upload MRI, CT Scan or DICOM Medical Image'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">Supported: PDF, JPG, PNG, DICOM (Up to 50MB)</span>
                     
-                    <input
-                      type="file"
-                      id="vault-file-upload-dialog"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          setUploadedFileName(file.name);
-                          setUploadedFileSize(`${(file.size / (1024 * 1024)).toFixed(1)} MB`);
-                          
-                          if (file.type.startsWith('image/')) {
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      <input
+                        type="file"
+                        id="vault-file-upload-dialog"
+                        accept={newRecType === 'Photo / Scan' ? 'image/*' : 'application/pdf,image/*,.dicom,.doc,.docx'}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            setUploadedFileObj(file);
+                            setUploadedFileName(file.name);
+                            setUploadedFileSize(`${(file.size / (1024 * 1024)).toFixed(1)} MB`);
+                            
+                            if (file.type.startsWith('image/')) {
+                              setUploadedFileType('image');
+                              setUploadedFilePreviewUrl(URL.createObjectURL(file));
+                            } else if (file.type.includes('pdf')) {
+                              setUploadedFileType('pdf');
+                              setUploadedFilePreviewUrl(null);
+                            } else {
+                              setUploadedFileType('dicom');
+                              setUploadedFilePreviewUrl(null);
+                            }
+
+                            if (!newRecTitle) {
+                              setNewRecTitle(file.name.replace(/\.[^/.]+$/, ""));
+                            }
+
+                            // Auto-trigger Gemini OCR text parsing
+                            runOcrOnSelectedFile(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="vault-file-upload-dialog"
+                        className="px-3.5 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition-colors"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-white" />
+                        <span>Choose File from Device</span>
+                      </label>
+
+                      {/* Photo Camera Capture direct action */}
+                      <input
+                        type="file"
+                        id="vault-photo-camera-capture"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            setNewRecType('Photo / Scan');
+                            setUploadedFileObj(file);
+                            setUploadedFileName(file.name);
+                            setUploadedFileSize(`${(file.size / (1024 * 1024)).toFixed(1)} MB`);
                             setUploadedFileType('image');
                             setUploadedFilePreviewUrl(URL.createObjectURL(file));
-                          } else if (file.type.includes('pdf')) {
-                            setUploadedFileType('pdf');
-                            setUploadedFilePreviewUrl(null);
-                          } else {
-                            setUploadedFileType('dicom');
-                            setUploadedFilePreviewUrl(null);
+                            if (!newRecTitle) setNewRecTitle('Medical Photo Scan');
+                            runOcrOnSelectedFile(file);
                           }
-
-                          if (!newRecTitle) {
-                            setNewRecTitle(file.name.replace(/\.[^/.]+$/, ""));
-                          }
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="vault-file-upload-dialog"
-                      className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl cursor-pointer inline-block shadow-sm transition-colors"
-                    >
-                      Choose File from Device
-                    </label>
+                        }}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="vault-photo-camera-capture"
+                        className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-white" />
+                        <span>Take Photo</span>
+                      </label>
+                    </div>
                   </div>
                 ) : (
-                  /* ATTACHED FILE THUMBNAIL / PREVIEW CARD */
-                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-3.5 space-y-2 relative animate-fade-in shadow-sm">
+                  /* ATTACHED FILE THUMBNAIL / PREVIEW CARD WITH OCR TRIGGER */
+                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-3.5 space-y-2.5 relative animate-fade-in shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
                         <Check className="w-4 h-4 text-emerald-600 bg-emerald-200 rounded-full p-0.5" />
@@ -322,6 +516,8 @@ export default function App() {
                           setUploadedFileSize('');
                           setUploadedFileType(null);
                           setUploadedFilePreviewUrl(null);
+                          setUploadedFileObj(null);
+                          setOcrSuccessMessage(null);
                         }}
                         className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline"
                       >
@@ -359,6 +555,33 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+
+                    {/* AI OCR Scan Action Button & Progress */}
+                    <div className="pt-1 flex items-center justify-between border-t border-emerald-200/80">
+                      <button
+                        type="button"
+                        onClick={() => runOcrOnSelectedFile()}
+                        disabled={isOcrScanning}
+                        className="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 disabled:opacity-60 text-white font-bold text-[11px] rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                      >
+                        {isOcrScanning ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Gemini OCR Extracting Text...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5 text-teal-200" />
+                            <span>Re-scan with Gemini Medical OCR</span>
+                          </>
+                        )}
+                      </button>
+
+                      <span className="text-[10px] text-teal-800 font-semibold flex items-center gap-1">
+                        <ScanLine className="w-3.5 h-3.5 text-teal-600" />
+                        Auto-OCR Enabled
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -389,13 +612,28 @@ export default function App() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Clinical Notes & Findings</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-700 block">Clinical Notes & Findings</label>
+                  {isOcrScanning && (
+                    <span className="text-[10px] text-teal-600 font-bold flex items-center gap-1 animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Gemini AI Parsing Image Text...
+                    </span>
+                  )}
+                </div>
+
+                {ocrSuccessMessage && (
+                  <div className="mb-2 p-2 bg-emerald-100/90 border border-emerald-300 text-emerald-900 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 animate-fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{ocrSuccessMessage}</span>
+                  </div>
+                )}
+
                 <textarea
                   value={newRecNotes}
                   onChange={(e) => setNewRecNotes(e.target.value)}
-                  placeholder="Include radiologist notes or main concerns..."
-                  rows={3}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Include radiologist notes or main concerns... (Auto-filled by AI OCR when document image is attached)"
+                  rows={5}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed font-mono"
                 />
               </div>
 
@@ -418,6 +656,24 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Authentication Modal (Login / Register) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentLang={currentLang}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          if (user.patientProfile) {
+            setPatientProfile(user.patientProfile);
+          }
+          if (user.role === 'doctor') {
+            setCurrentTab('doctor-portal');
+          } else {
+            setCurrentTab('dashboard');
+          }
+        }}
+      />
 
       {/* Footer */}
       <Footer

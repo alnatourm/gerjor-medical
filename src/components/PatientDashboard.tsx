@@ -42,7 +42,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-0.5 rounded">
-                Verified Patient Portal
+                {t.verifiedPatientPortal}
               </span>
               <span className="text-xs text-slate-400">ID: JO-DE-89214</span>
             </div>
@@ -60,7 +60,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center gap-1.5"
             >
               <Settings className="w-4 h-4" />
-              <span>Profile & Medical Settings</span>
+              <span>{t.profileAndMedicalSettings}</span>
             </button>
 
             <button
@@ -68,7 +68,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl border border-slate-700 transition-colors flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4 text-teal-400" />
-              <span>Upload MRI/Lab</span>
+              <span>{t.uploadMriLabBtn}</span>
             </button>
 
             <button
@@ -76,7 +76,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl border border-slate-700 transition-colors flex items-center gap-1.5"
             >
               <Calendar className="w-4 h-4 text-teal-400" />
-              <span>Book Appointment</span>
+              <span>{t.bookAppointmentBtn}</span>
             </button>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             }`}
           >
             <Calendar className="w-4 h-4" />
-            <span>Consultations ({appointments.length})</span>
+            <span>{t.consultationsCount} ({appointments.length})</span>
           </button>
 
           <button
@@ -100,7 +100,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>Medical Vault & MRIs ({records.length})</span>
+            <span>{t.medicalVaultCount} ({records.length})</span>
           </button>
 
           <button
@@ -108,7 +108,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             className="pb-3 px-4 border-b-2 border-transparent text-slate-600 hover:text-teal-700 transition-colors flex items-center gap-2 ml-auto"
           >
             <User className="w-4 h-4 text-teal-600" />
-            <span>Profile & Medical Settings ⚙️</span>
+            <span>{t.profileAndMedicalSettings} ⚙️</span>
           </button>
         </div>
 
@@ -125,7 +125,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
               {upcomingApps.length === 0 ? (
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500 text-xs">
-                  No upcoming international consultations scheduled.
+                  {t.noUpcomingConsultations}
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -137,7 +137,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                           <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
                             app.doctorCountry === 'DE' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-amber-100 text-amber-900 border border-amber-200'
                           }`}>
-                            {app.doctorCountry === 'DE' ? '🇩🇪 Germany Consultation' : '🇯🇴 Jordan Consultation'}
+                            {app.doctorCountry === 'DE' ? t.germanyConsultationBadge : t.jordanConsultationBadge}
                           </span>
                           <span className="text-xs text-slate-500">· ID: #{app.id}</span>
                         </div>
@@ -147,7 +147,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                           {app.doctorSpecialty} · {app.doctorHospital}
                         </p>
 
-                        <div className="flex items-center gap-4 text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono">
+                        <div className="flex items-center gap-4 text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono flex-wrap">
                           <span>📅 {app.date}</span>
                           <span>🇯🇴 Amman: <strong>{app.timeAmman} EET</strong></span>
                           <span>🇩🇪 Berlin: <strong>{app.timeBerlin} CET</strong></span>
@@ -157,7 +157,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                           <div className="bg-teal-50 border border-teal-200/80 rounded-xl p-3 text-xs text-teal-950 flex items-start gap-2 max-w-2xl">
                             <Sparkles className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                             <div>
-                              <span className="font-bold block">AI Pre-Consultation Intake</span>
+                              <span className="font-bold block">{t.aiPreConsultationIntake}</span>
                               <span>{app.aiSummary}</span>
                             </div>
                           </div>
@@ -170,11 +170,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                           className="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
                         >
                           <Video className="w-4 h-4" />
-                          <span>Enter Live Virtual Clinic</span>
+                          <span>{t.enterLiveVirtualClinic}</span>
                         </button>
 
                         <span className="text-[11px] text-slate-400 font-medium text-center">
-                          Vortual Clinic opens 10 mins prior
+                          {t.virtualClinicOpenNotice}
                         </span>
                       </div>
 
@@ -198,7 +198,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">
-                            ✓ Consultation Completed
+                            {t.consultationCompletedBadge}
                           </span>
                           <span className="text-xs text-slate-500">Date: {app.date}</span>
                         </div>
@@ -207,7 +207,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs text-slate-400 block">Fee Paid</span>
+                        <span className="text-xs text-slate-400 block">{t.feePaidLabel}</span>
                         <span className="text-sm font-bold text-slate-900">{app.totalFee} {app.currency}</span>
                       </div>
                     </div>
@@ -217,7 +217,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       <div className="bg-slate-900 text-white rounded-xl p-4 space-y-3 text-xs border border-slate-800">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                           <span className="font-bold text-teal-400 flex items-center gap-1.5">
-                            <FileCheck className="w-4 h-4 text-teal-400" /> Issued E-Prescription
+                            <FileCheck className="w-4 h-4 text-teal-400" /> {t.issuedEPrescription}
                           </span>
                           <span className="text-[10px] text-slate-400">{app.prescription.date}</span>
                         </div>
@@ -232,18 +232,18 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                         </div>
 
                         <div className="text-[11px] text-slate-300">
-                          <span className="font-bold text-slate-400 block text-[10px] uppercase">Doctor Advice:</span>
+                          <span className="font-bold text-slate-400 block text-[10px] uppercase">{t.doctorAdviceLabel}</span>
                           <p>{app.prescription.notes}</p>
                         </div>
 
                         <div className="flex items-center justify-between border-t border-slate-800 pt-2 text-[10px] text-slate-400">
-                          <span>Signed: {app.prescription.doctorSignature}</span>
+                          <span>{t.signedByLabel} {app.prescription.doctorSignature}</span>
                           <button
                             onClick={() => alert(`Downloading official PDF prescription signed by ${app.doctorName}...`)}
                             className="px-3 py-1 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1"
                           >
                             <Download className="w-3.5 h-3.5" />
-                            <span>Download Prescription PDF</span>
+                            <span>{t.downloadPrescriptionPdfBtn}</span>
                           </button>
                         </div>
                       </div>
@@ -262,7 +262,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">{t.medicalVault}</h3>
-                <p className="text-xs text-slate-500">Secure 256-bit encrypted storage for X-Rays, Brain/Joint MRIs, and Blood Panel Lab Reports.</p>
+                <p className="text-xs text-slate-500">{t.medicalVaultSubtitle}</p>
               </div>
 
               <button
@@ -270,7 +270,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                <span>Upload New Diagnostic File</span>
+                <span>{t.uploadNewDiagnosticFileBtn}</span>
               </button>
             </div>
 
@@ -302,19 +302,19 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     <div className="bg-slate-900 text-white rounded-xl p-3 text-xs space-y-1">
                       <div className="flex items-center gap-1.5 text-teal-400 font-bold">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Gemini AI Bilingual Medical Explanation</span>
+                        <span>{t.aiBilingualExplanation}</span>
                       </div>
                       <p className="text-slate-300 leading-relaxed text-[11px]">{rec.aiSummary}</p>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                    <span className="text-slate-400 font-medium">Source: {rec.uploadedBy}</span>
+                    <span className="text-slate-400 font-medium">{t.sourceLabel} {rec.uploadedBy}</span>
                     <button
                       onClick={() => alert(`Accessing encrypted diagnostic DICOM/PDF viewer for ${rec.title}...`)}
                       className="text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1"
                     >
-                      <span>Open File</span>
+                      <span>{t.openFileBtn}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   </div>

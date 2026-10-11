@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Doctor, ConsultationType, LanguageCode, CurrencyCode, Appointment } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
 import { VoiceNoteRecorder } from './VoiceNoteRecorder';
-import { X, Calendar, Clock, User, Mail, Phone, FileText, Sparkles, Check, ChevronRight, Upload, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Calendar, Clock, User, Mail, Phone, FileText, Sparkles, Check, ChevronRight, Upload, AlertCircle, Loader2, Camera, FlaskConical } from 'lucide-react';
 
 interface BookingModalProps {
   doctor: Doctor | null;
@@ -34,6 +34,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [patientEmail, setPatientEmail] = useState<string>('omar.masmoudi@example.com');
   const [patientPhone, setPatientPhone] = useState<string>('+962 7 9123 4567');
   const [symptoms, setSymptoms] = useState<string>('Persistent headache and blurred vision for 3 weeks following physical exertion. Brain MRI completed in September 2026.');
+  const [bookingUploadCat, setBookingUploadCat] = useState<'lab_report' | 'doctor_report' | 'photo' | 'mri'>('lab_report');
+  const [bookingAttachedFiles, setBookingAttachedFiles] = useState<Array<{ id: string; name: string; category: string }>>([
+    { id: 'app-f1', name: 'Brain_MRI_Sept2026_Report.pdf', category: 'mri' }
+  ]);
 
   // AI Intake State
   const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
@@ -50,7 +54,16 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     { amman: '20:00', berlin: '19:00' }
   ];
 
+  const isFileReview = consultationType === 'record_review' || consultationType === 'second_opinion';
+
   const formatFee = () => {
+    if (isFileReview) {
+      const eurRate = doctor.feeFileReviewEur ?? Math.round(doctor.feeEur * 0.7);
+      const jodRate = doctor.feeFileReviewJod ?? Math.round(doctor.feeJod * 0.7);
+      if (currentCurrency === 'EUR') return `€${eurRate}`;
+      if (currentCurrency === 'JOD') return `${jodRate} JOD`;
+      return `$${Math.round(doctor.feeUsd * 0.7)}`;
+    }
     if (currentCurrency === 'EUR') return `€${doctor.feeEur}`;
     if (currentCurrency === 'JOD') return `${doctor.feeJod} JOD`;
     return `$${doctor.feeUsd}`;
@@ -307,10 +320,144 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
 
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50 hover:bg-slate-100/80 transition-colors cursor-pointer space-y-1">
-                <Upload className="w-6 h-6 text-teal-600 mx-auto" />
-                <span className="text-xs font-bold text-slate-800 block">{t.uploadRecord}</span>
-                <span className="text-[11px] text-slate-500 block">Attached file: Brain_MRI_Sept2026_Report.pdf (14.2 MB)</span>
+              {/* Document Category Upload Section */}
+              <div className="space-y-2 bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs">
+                <label className="font-bold text-slate-800 block text-xs">
+                  {t.selectUploadTypeLabel}
+                </label>
+
+                <div className="grid grid-cols-3 gap-1.5 font-semibold text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setBookingUploadCat('lab_report')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      bookingUploadCat === 'lab_report'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold ring-2 ring-emerald-500/20'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FlaskConical className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="truncate">{t.labReportBadge}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBookingUploadCat('doctor_report')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      bookingUploadCat === 'doctor_report'
+                        ? 'bg-sky-50 border-sky-500 text-sky-800 font-bold ring-2 ring-sky-500/20'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate">{t.doctorReportBadge}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBookingUploadCat('photo')}
+                    className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                      bookingUploadCat === 'photo'
+                        ? 'bg-purple-50 border-purple-500 text-purple-800 font-bold ring-2 ring-purple-500/20'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span className="truncate">{t.photoBadge}</span>
+                  </button>
+                </div>
+
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center bg-white hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    {bookingUploadCat === 'lab_report' && <FlaskConical className="w-5 h-5 text-emerald-600" />}
+                    {bookingUploadCat === 'doctor_report' && <FileText className="w-5 h-5 text-sky-600" />}
+                    {bookingUploadCat === 'photo' && <Camera className="w-5 h-5 text-purple-600" />}
+                    {bookingUploadCat === 'mri' && <Upload className="w-5 h-5 text-teal-600" />}
+                  </div>
+
+                  <span className="text-xs font-bold text-slate-800 block mb-1">
+                    {bookingUploadCat === 'lab_report' && t.uploadLabReportOption}
+                    {bookingUploadCat === 'doctor_report' && t.uploadDoctorReportOption}
+                    {bookingUploadCat === 'photo' && t.uploadPhotoOption}
+                    {bookingUploadCat === 'mri' && t.uploadMriOption}
+                  </span>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <input
+                      type="file"
+                      id="booking-file-input"
+                      accept={bookingUploadCat === 'photo' ? 'image/*' : 'application/pdf,image/*,.dicom,.doc,.docx'}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setBookingAttachedFiles(prev => [
+                            ...prev,
+                            { id: `b-f-${Date.now()}`, name: file.name, category: bookingUploadCat }
+                          ]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="booking-file-input"
+                      className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{t.chooseFileBtn}</span>
+                    </label>
+
+                    <input
+                      type="file"
+                      id="booking-photo-capture"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setBookingAttachedFiles(prev => [
+                            ...prev,
+                            { id: `b-f-${Date.now()}`, name: file.name, category: 'photo' }
+                          ]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="booking-photo-capture"
+                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>{t.uploadPhotoActionBtn}</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Attached Files List in Booking Modal */}
+                {bookingAttachedFiles.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[11px] font-bold text-slate-700 block">Attached Records:</span>
+                    <div className="space-y-1">
+                      {bookingAttachedFiles.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 text-xs">
+                          <div className="flex items-center gap-2 truncate">
+                            {file.category === 'lab_report' && <FlaskConical className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                            {file.category === 'doctor_report' && <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />}
+                            {file.category === 'photo' && <Camera className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
+                            {file.category === 'mri' && <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
+                            <span className="font-semibold text-slate-800 truncate">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setBookingAttachedFiles(prev => prev.filter(f => f.id !== file.id))}
+                            className="text-slate-400 hover:text-rose-600 p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 flex items-start gap-2.5 text-xs text-teal-900">

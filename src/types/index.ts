@@ -16,6 +16,17 @@ export type Specialty =
 
 export type ConsultationType = 'video' | 'second_opinion' | 'record_review';
 
+export interface CertificateDoc {
+  id: string;
+  title: string;
+  issuingBody: string;
+  year: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: 'pdf' | 'image' | 'doc';
+  issueDate?: string;
+}
+
 export interface Doctor {
   id: string;
   name: string;
@@ -29,7 +40,7 @@ export interface Doctor {
   hospitalDe?: string;
   specialty: Specialty;
   subSpecialties: string[];
-  languages: ('Arabic' | 'German' | 'English')[];
+  languages: ('Arabic' | 'German' | 'English' | string)[];
   experienceYears: number;
   rating: number;
   reviewCount: number;
@@ -38,9 +49,12 @@ export interface Doctor {
   bioDe?: string;
   education: string[];
   certifications: string[];
+  certificateDocs?: CertificateDoc[];
   feeJod: number;
   feeEur: number;
   feeUsd: number;
+  feeFileReviewEur?: number;
+  feeFileReviewJod?: number;
   avatarUrl?: string;
   nextAvailable: string;
   availableTypes: ConsultationType[];
@@ -60,13 +74,17 @@ export interface TimeSlot {
 export interface MedicalRecord {
   id: string;
   title: string;
-  type: 'Lab Result' | 'MRI/CT Scan' | 'Prescription' | 'Doctor Summary' | 'Referral Letter';
+  type: 'Lab Result' | 'Doctor Report' | 'Photo / Scan' | 'MRI/CT Scan' | 'Prescription' | 'Doctor Summary' | 'Referral Letter';
   date: string;
   uploadedBy: string;
+  patientName?: string;
+  patientEmail?: string;
   fileSize?: string;
   notes?: string;
   aiSummary?: string;
   language?: LanguageCode;
+  fileUrl?: string;
+  fileName?: string;
 }
 
 export interface Appointment {
@@ -127,6 +145,19 @@ export interface PatientProfile {
   emergencyContactName: string;
   emergencyContactRelation: string;
   emergencyContactPhone: string;
+}
+
+export interface UserAccount {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: 'patient' | 'doctor' | 'admin';
+  country: 'JO' | 'DE' | 'Other';
+  preferredLanguage: LanguageCode;
+  isAuthenticated: boolean;
+  avatarUrl?: string;
+  patientProfile?: PatientProfile;
 }
 
 export interface ChatMessage {

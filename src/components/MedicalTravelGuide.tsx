@@ -23,7 +23,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
         <div className="bg-slate-900 text-white rounded-2xl p-8 border border-slate-800 shadow-xl space-y-3 relative overflow-hidden">
           <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-semibold">
             <Plane className="w-4 h-4 text-teal-400" />
-            <span>Cross-Border Inpatient Care & Transfer Protocol</span>
+            <span>{t.crossBorderCareTag}</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -47,7 +47,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
                   <h3 className="font-bold text-slate-900 text-base">{t.visaJordanianToDe}</h3>
                 </div>
                 <span className="bg-sky-100 text-sky-900 font-bold text-[10px] px-2.5 py-0.5 rounded border border-sky-200">
-                  Schengen Medical
+                  {t.schengenMedicalBadge}
                 </span>
               </div>
 
@@ -86,7 +86,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
               onClick={onBookSpecialist}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 mt-4"
             >
-              <span>Consult German Chief Physician</span>
+              <span>{t.consultGermanChiefBtn}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -100,7 +100,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
                   <h3 className="font-bold text-slate-900 text-base">{t.visaDeToJordan}</h3>
                 </div>
                 <span className="bg-amber-100 text-amber-900 font-bold text-[10px] px-2.5 py-0.5 rounded border border-amber-200">
-                  Amman Medical Hub
+                  {t.ammanMedicalHubBadge}
                 </span>
               </div>
 
@@ -139,7 +139,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
               onClick={onBookSpecialist}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 mt-4"
             >
-              <span>Consult Jordanian Specialist</span>
+              <span>{t.consultJordanianSpecialistBtn}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -149,9 +149,9 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
         {/* Emergency Transfer Assistance Callout */}
         <div className="bg-teal-900 text-white rounded-2xl p-6 border border-teal-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-xs font-bold text-teal-300 uppercase tracking-wider block">24/7 International Medical Desk</span>
-            <h4 className="text-lg font-bold text-white">Need Urgent Air Ambulance or Medical Referral Letter?</h4>
-            <p className="text-xs text-teal-200">Our cross-border medical coordinators in Amman and Berlin assist with emergency air transports and hospital transfers.</p>
+            <span className="text-xs font-bold text-teal-300 uppercase tracking-wider block">{t.internationalDeskTag}</span>
+            <h4 className="text-lg font-bold text-white">{t.urgentAirAmbulanceTitle}</h4>
+            <p className="text-xs text-teal-200">{t.urgentAirAmbulanceDesc}</p>
           </div>
 
           <button
@@ -159,7 +159,7 @@ export const MedicalTravelGuide: React.FC<MedicalTravelGuideProps> = ({
             className="px-6 py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-2 shadow-lg"
           >
             <PhoneCall className="w-4 h-4 text-teal-700" />
-            <span>Contact 24/7 Medical Desk</span>
+            <span>{t.emergencyCallBtn}</span>
           </button>
         </div>
 

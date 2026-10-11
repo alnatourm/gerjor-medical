@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Square, Play, Pause, Trash2, Sparkles, Loader2, Check, RefreshCw, Volume2 } from 'lucide-react';
 import { LanguageCode } from '../types';
+import { TRANSLATIONS } from '../translations/translations';
 
 interface VoiceNoteRecorderProps {
   currentLang: LanguageCode;
@@ -13,6 +14,7 @@ export const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
   onTranscriptionComplete,
   label = 'Record Voice Symptom Note'
 }) => {
+  const t = TRANSLATIONS[currentLang];
   const isRtl = currentLang === 'ar';
 
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -180,7 +182,7 @@ export const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
       {!isRecording && !audioUrl && !lastTranscription && (
         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
           <span className="text-xs text-slate-400">
-            {currentLang === 'ar' ? 'اضغط للتسجيل الصوتي باللغات (عربي / ألماني / إنجليزي)' : (currentLang === 'de' ? 'Klicken Sie für Sprachnotiz (DE / AR / EN)' : 'Speak your symptoms in Arabic, German, or English')}
+            {t.speakPromptText}
           </span>
 
           <button
@@ -189,7 +191,7 @@ export const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
             className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-lg transition-all shadow-md flex items-center gap-1.5 shrink-0"
           >
             <Mic className="w-3.5 h-3.5" />
-            <span>Record Voice Note</span>
+            <span>{t.recordVoiceBtn}</span>
           </button>
         </div>
       )}
@@ -217,7 +219,7 @@ export const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
             className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5"
           >
             <Square className="w-3.5 h-3.5 fill-white" />
-            <span>Stop & Transcribe</span>
+            <span>{t.stopAndTranscribeBtn}</span>
           </button>
         </div>
       )}

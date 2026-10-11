@@ -79,7 +79,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         <div className="bg-emerald-900 text-white p-4 rounded-xl border border-emerald-700 shadow-lg flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <Check className="w-5 h-5 text-emerald-400" />
-            <span>Profile and Medical Settings Saved Successfully! Changes updated across Jordan & Germany portal systems.</span>
+            <span>{t.profileSavedNotice}</span>
           </div>
           <button onClick={() => setShowSaveSuccess(false)} className="text-emerald-300 hover:text-white">
             ✕
@@ -92,13 +92,13 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-teal-500/20 text-teal-300 text-xs font-bold px-2.5 py-0.5 rounded border border-teal-500/30">
-              Patient Medical Record Settings
+              {t.patientRecordSettings}
             </span>
             <span className="text-xs text-slate-400">ID: JO-DE-89214</span>
           </div>
-          <h2 className="text-2xl font-bold text-white">Profile & Medical Configuration</h2>
+          <h2 className="text-2xl font-bold text-white">{t.profileConfigurationTitle}</h2>
           <p className="text-xs text-slate-300 mt-1">
-            Keep your clinical history, international insurance policy, and preferred contact language up to date for doctors in Jordan and Germany.
+            {t.profileConfigurationSubtitle}
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
           className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 shrink-0"
         >
           <Save className="w-4 h-4" />
-          <span>Save Profile Settings</span>
+          <span>{t.saveProfileSettingsBtn}</span>
         </button>
       </div>
 
@@ -123,7 +123,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               }`}
             >
               <HeartPulse className="w-4 h-4 text-teal-500" />
-              <span>Medical History</span>
+              <span>{t.medicalHistoryTab}</span>
             </button>
 
             <button
@@ -133,7 +133,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               }`}
             >
               <Shield className="w-4 h-4 text-teal-500" />
-              <span>Insurance Provider</span>
+              <span>{t.insuranceProviderTab}</span>
             </button>
 
             <button
@@ -143,7 +143,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               }`}
             >
               <Globe className="w-4 h-4 text-teal-500" />
-              <span>Contact Language</span>
+              <span>{t.contactLanguageTab}</span>
             </button>
 
             <button
@@ -153,17 +153,17 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               }`}
             >
               <User className="w-4 h-4 text-teal-500" />
-              <span>Personal & Emergency</span>
+              <span>{t.personalEmergencyTab}</span>
             </button>
           </div>
 
           <div className="bg-teal-50 border border-teal-200/80 rounded-2xl p-4 text-xs text-teal-950 space-y-2">
             <div className="flex items-center gap-1.5 font-bold text-teal-900">
               <Sparkles className="w-4 h-4 text-teal-600" />
-              <span>Cross-Border Synchronization</span>
+              <span>{t.crossBorderSyncTitle}</span>
             </div>
             <p className="text-[11px] leading-relaxed text-teal-900/80">
-              Medical records updated here are automatically formatted into bilingual summaries for Jordanian and German specialists prior to your video appointments.
+              {t.crossBorderSyncDesc}
             </p>
           </div>
         </div>
@@ -178,17 +178,17 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <HeartPulse className="w-5 h-5 text-teal-600" />
-                    <span>Medical History & Clinical Conditions</span>
+                    <span>{t.medHistoryHeader}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Provide accurate background data so consulting doctors in Amman or Berlin can prescribe safe, coordinated treatments.
+                    {t.medHistorySubtitle}
                   </p>
                 </div>
 
                 {/* Chronic Conditions List */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-800 block">
-                    Chronic Diagnoses & Pre-Existing Conditions
+                    {t.chronicDiagnosesLabel}
                   </label>
                   
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -207,7 +207,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       type="text"
                       value={newCondition}
                       onChange={(e) => setNewCondition(e.target.value)}
-                      placeholder="e.g. Hypertension, Type 2 Diabetes, Migraine..."
+                      placeholder={t.chronicPlaceholder}
                       className="flex-1 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <button
@@ -216,7 +216,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 flex items-center gap-1 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add</span>
+                      <span>{t.addBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 {/* Allergies List */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-800 block">
-                    Known Allergies (Medications, Foods, Environmental)
+                    {t.knownAllergiesLabel}
                   </label>
                   
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -243,7 +243,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       type="text"
                       value={newAllergy}
                       onChange={(e) => setNewAllergy(e.target.value)}
-                      placeholder="e.g. Penicillin, Sulfa drugs, Latex, Iodine..."
+                      placeholder={t.allergiesPlaceholder}
                       className="flex-1 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <button
@@ -252,7 +252,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 flex items-center gap-1 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add Allergy</span>
+                      <span>{t.addAllergyBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -260,7 +260,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 {/* Current Medications List */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-800 block">
-                    Current Regular Medications & Dosages
+                    {t.currentMedsLabel}
                   </label>
                   
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -279,7 +279,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       type="text"
                       value={newMedication}
                       onChange={(e) => setNewMedication(e.target.value)}
-                      placeholder="e.g. Bisoprolol 5mg once daily, Metformin 500mg..."
+                      placeholder={t.medsPlaceholder}
                       className="flex-1 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <button
@@ -288,7 +288,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 flex items-center gap-1 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add Medication</span>
+                      <span>{t.addMedicationBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 {/* Past Surgeries & Blood Type */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Blood Type</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.bloodTypeLabel}</label>
                     <select
                       value={formData.bloodType}
                       onChange={(e) => setFormData({ ...formData, bloodType: e.target.value })}
@@ -314,24 +314,24 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Past Surgical Operations</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.pastSurgeriesLabel}</label>
                     <input
                       type="text"
                       value={formData.pastSurgeries}
                       onChange={(e) => setFormData({ ...formData, pastSurgeries: e.target.value })}
-                      placeholder="e.g. Appendectomy (2018), Knee Arthroscopy (2022)"
+                      placeholder={t.pastSurgeriesPlaceholder}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-800 block mb-1">Family Medical History Notes</label>
+                  <label className="text-xs font-bold text-slate-800 block mb-1">{t.familyHistoryLabel}</label>
                   <textarea
                     value={formData.familyHistory}
                     onChange={(e) => setFormData({ ...formData, familyHistory: e.target.value })}
                     rows={2}
-                    placeholder="e.g. Maternal history of cardiac arrhythmias; paternal history of diabetes..."
+                    placeholder={t.familyHistoryPlaceholder}
                     className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
@@ -344,32 +344,32 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Shield className="w-5 h-5 text-teal-600" />
-                    <span>Insurance Provider & Coverage Policy</span>
+                    <span>{t.insuranceHeader}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Enter your Jordanian, German, or International insurance policy details for claim reimbursement or direct hospital billing.
+                    {t.insuranceSubtitle}
                   </p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Insurance Provider / Company Name</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.insuranceCompanyLabel}</label>
                     <input
                       type="text"
                       value={formData.insuranceProviderName}
                       onChange={(e) => setFormData({ ...formData, insuranceProviderName: e.target.value })}
-                      placeholder="e.g. Techniker Krankenkasse (TK), Allianz, Bupa Arabia, Jordan Insurance Co."
+                      placeholder={t.insuranceCompanyPlaceholder}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Policy / Member Insurance ID Number</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.policyNumberLabel}</label>
                     <input
                       type="text"
                       value={formData.insurancePolicyNumber}
                       onChange={(e) => setFormData({ ...formData, insurancePolicyNumber: e.target.value })}
-                      placeholder="e.g. A-981240129 / JO-88129"
+                      placeholder={t.policyNumberPlaceholder}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
                     />
                   </div>
@@ -377,21 +377,21 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Coverage Scope</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.coverageScopeLabel}</label>
                     <select
                       value={formData.coverageRegion}
                       onChange={(e) => setFormData({ ...formData, coverageRegion: e.target.value as any })}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-teal-500"
                     >
-                      <option value="International / Cross-Border">🌍 International / Cross-Border (Jordan & Germany)</option>
-                      <option value="Germany Only">🇩🇪 Germany Only (GKV / PKV)</option>
-                      <option value="Jordan Only">🇯🇴 Jordan Only (Ministry / Private)</option>
-                      <option value="Self-Pay / Private">💵 Self-Pay / Direct Private Payment</option>
+                      <option value="International / Cross-Border">{t.coverageInternational}</option>
+                      <option value="Germany Only">{t.coverageGermany}</option>
+                      <option value="Jordan Only">{t.coverageJordan}</option>
+                      <option value="Self-Pay / Private">{t.coverageSelfPay}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Policy Expiry Date</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.policyExpiryLabel}</label>
                     <input
                       type="date"
                       value={formData.insuranceExpiry}
@@ -404,14 +404,14 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 {/* Insurance Card Upload Banner */}
                 <div className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center bg-slate-50 space-y-2">
                   <Upload className="w-6 h-6 text-teal-600 mx-auto" />
-                  <span className="text-xs font-bold text-slate-800 block">Upload Insurance Card Photo or PDF (Front & Back)</span>
-                  <span className="text-[11px] text-slate-500 block">Current Status: {formData.insuranceCardUploaded ? '✅ Insurance Card Verified on File' : '⚠️ Card Not Uploaded Yet'}</span>
+                  <span className="text-xs font-bold text-slate-800 block">{t.uploadInsuranceCardLabel}</span>
+                  <span className="text-[11px] text-slate-500 block">Status: {formData.insuranceCardUploaded ? t.cardVerifiedStatus : t.cardNotUploadedStatus}</span>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, insuranceCardUploaded: true })}
                     className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-lg transition-colors"
                   >
-                    {formData.insuranceCardUploaded ? 'Replace Uploaded Card' : 'Upload Card Copy'}
+                    {formData.insuranceCardUploaded ? t.replaceCardBtn : t.uploadCardBtn}
                   </button>
                 </div>
               </div>
@@ -423,15 +423,15 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Globe className="w-5 h-5 text-teal-600" />
-                    <span>Preferred Language & Communication Preferences</span>
+                    <span>{t.prefLangHeader}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Select your primary consultation and document language. AI subtitles and bilingual prescriptions will default to this language.
+                    {t.prefLangSubtitle}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-800 block mb-2">Preferred Consultation & Portal Language</label>
+                  <label className="text-xs font-bold text-slate-800 block mb-2">{t.prefPortalLangLabel}</label>
                   
                   <div className="grid sm:grid-cols-3 gap-3">
                     <button
@@ -444,7 +444,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       }`}
                     >
                       <span className="font-bold text-slate-900 text-sm block">🇬🇧 English</span>
-                      <span className="text-[11px] text-slate-500 block">Standard International Clinical Language</span>
+                      <span className="text-[11px] text-slate-500 block">{t.langEnglishSub}</span>
                     </button>
 
                     <button
@@ -457,7 +457,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       }`}
                     >
                       <span className="font-bold text-slate-900 text-sm block">🇯🇴 العربية (Arabic)</span>
-                      <span className="text-[11px] text-slate-500 block">اللغة العربية مع الواجهة اليمنى</span>
+                      <span className="text-[11px] text-slate-500 block">{t.langArabicSub}</span>
                     </button>
 
                     <button
@@ -470,13 +470,13 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                       }`}
                     >
                       <span className="font-bold text-slate-900 text-sm block">🇩🇪 Deutsch (German)</span>
-                      <span className="text-[11px] text-slate-500 block">Deutsche medizinische Fachsprache</span>
+                      <span className="text-[11px] text-slate-500 block">{t.langGermanSub}</span>
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-800 block mb-2">Preferred Appointment Reminders Method</label>
+                  <label className="text-xs font-bold text-slate-800 block mb-2">{t.remindersMethodLabel}</label>
                   
                   <div className="grid sm:grid-cols-3 gap-3">
                     {['WhatsApp', 'Email', 'Phone Call'].map((method) => (
@@ -504,16 +504,16 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <User className="w-5 h-5 text-teal-600" />
-                    <span>Personal Info & Emergency Contact</span>
+                    <span>{t.personalInfoHeader}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Official passport details required for cross-border medical referral letters and Schengen visa facilitation.
+                    {t.personalInfoSubtitle}
                   </p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Full Name (Matching Passport)</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.fullNamePassportLabel}</label>
                     <input
                       type="text"
                       value={formData.fullName}
@@ -523,7 +523,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Passport / National ID Number</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.passportIdLabel}</label>
                     <input
                       type="text"
                       value={formData.passportId}
@@ -536,7 +536,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Date of Birth</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.dobLabel}</label>
                     <input
                       type="date"
                       value={formData.dob}
@@ -546,36 +546,36 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Gender</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.genderLabel}</label>
                     <select
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-teal-500"
                     >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
+                      <option value="Male">{t.genderMale}</option>
+                      <option value="Female">{t.genderFemale}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">Country of Primary Residence</label>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">{t.residenceCountryLabel}</label>
                     <select
                       value={formData.countryOfResidence}
                       onChange={(e) => setFormData({ ...formData, countryOfResidence: e.target.value as any })}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-teal-500"
                     >
-                      <option value="JO">🇯🇴 Jordan</option>
-                      <option value="DE">🇩🇪 Germany</option>
-                      <option value="Other">🌍 Other International</option>
+                      <option value="JO">{t.jordanFlag}</option>
+                      <option value="DE">{t.germanyFlag}</option>
+                      <option value="Other">🌍 International</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="border-t border-slate-100 pt-4 space-y-3">
-                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Emergency Next of Kin Contact</h4>
+                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">{t.emergencyContactHeader}</h4>
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">Contact Name</label>
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">{t.emergencyNameLabel}</label>
                       <input
                         type="text"
                         value={formData.emergencyContactName}
@@ -585,7 +585,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">Relationship</label>
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">{t.emergencyRelationLabel}</label>
                       <input
                         type="text"
                         value={formData.emergencyContactRelation}
@@ -595,7 +595,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">Emergency Phone Number</label>
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">{t.emergencyPhoneLabel}</label>
                       <input
                         type="text"
                         value={formData.emergencyContactPhone}
@@ -615,7 +615,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 className="px-8 py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                <span>Save All Profile & Medical Settings</span>
+                <span>{t.saveAllProfileSettingsBtn}</span>
               </button>
             </div>
 

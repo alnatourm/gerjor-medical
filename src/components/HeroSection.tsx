@@ -22,11 +22,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [query, setQuery] = React.useState('');
   const [selectedSpecialty, setSelectedSpecialty] = React.useState<Specialty | ''>('');
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearchDoctors(query, selectedSpecialty || undefined, selectedCountry);
-  };
-
   const specialtiesList: Specialty[] = [
     'Cardiology',
     'Neurology',
@@ -88,7 +83,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs text-teal-300">
               <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-              <span>Real-Time Arabic / German AI Telemedicine Portal</span>
+              <span>{t.realtimePortalTag}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight font-sans">
@@ -99,14 +94,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {t.heroDescription}
             </p>
 
-            {/* Automated Matching System Callout Box (No Manual Doctor Search) */}
+            {/* Automated Matching System Callout Box */}
             <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-2xl space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-teal-300">
                 <Sparkles className="w-4 h-4 text-teal-400" />
-                <span>Automated Doctor Matching Engine</span>
+                <span>{t.autoMatchEngineTitle}</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Patients do not manually select doctors. Select your target country (Jordan or Germany) in Step 1 above, submit your case or voice note, and the system will automatically assign the best-matched specialist.
+                {t.autoMatchEngineDesc}
               </p>
 
               <div className="flex flex-wrap gap-2 pt-1">
@@ -115,7 +110,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
                 >
-                  <span>Start Automated Doctor Matching</span>
+                  <span>{t.startAutoMatchBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -123,14 +118,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Specialty Overview List */}
             <div className="space-y-2 pt-1">
-              <span className="text-xs text-slate-400 font-medium block">Covered Medical Specialties:</span>
+              <span className="text-xs text-slate-400 font-medium block">{t.coveredSpecialtiesLabel}</span>
               <div className="flex flex-wrap gap-2">
                 {specialtiesList.map(spec => (
                   <span
                     key={spec}
                     className="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/80 border border-slate-700/80 text-slate-300"
                   >
-                    {spec}
+                    {t[spec] || spec}
                   </span>
                 ))}
               </div>
@@ -148,18 +143,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <Video className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Trilingual Real-Time AI Consultation</h3>
-                  <span className="text-xs text-teal-300">Arabic · German · English</span>
+                  <h3 className="text-base font-bold text-white">{t.trilingualConsultationTitle}</h3>
+                  <span className="text-xs text-teal-300">{t.trilingualConsultationLangs}</span>
                 </div>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Speak naturally in Arabic or German during live video consultations. Integrated Gemini AI performs real-time clinical medical term translation and generates instant post-consultation reports.
+                {t.trilingualConsultationDesc}
               </p>
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-teal-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Shield className="w-4 h-4 text-emerald-400" /> Encrypted & HIPAA Compliant
+                  <Shield className="w-4 h-4 text-emerald-400" /> {t.encryptedHipaaNotice}
                 </span>
-                <span className="text-slate-400">Live Captions</span>
+                <span className="text-slate-400">{t.liveCaptionsBadge}</span>
               </div>
             </div>
 

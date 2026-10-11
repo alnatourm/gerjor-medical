@@ -43,15 +43,15 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
       setAiResult(data.data || {
         chiefComplaint: inputPrompt,
         chronology: 'Reported symptoms',
-        clinicalSummary: 'Patient describes acute symptoms requiring specialist evaluation. Relevant diagnostic imaging and previous prescriptions should be provided during video consultation.',
+        clinicalSummary: currentLang === 'ar' ? 'يصف المريض أعراضاً حادة تتطلب تقييماً استشارياً متخضصاً. يوصى بإرفاق الفحوصات والأشعة السابقة خلال استشارة الفيديو.' : (currentLang === 'de' ? 'Der Patient beschreibt akute Symptome, die eine fachärztliche Beurteilung erfordern. Relevante Befunde sollten bereitgestellt werden.' : 'Patient describes acute symptoms requiring specialist evaluation. Relevant diagnostic imaging and previous prescriptions should be provided during video consultation.'),
         keyMedicalTerms: [
           { english: 'Symptom Review', arabic: 'مراجعة الأعراض', german: 'Symptomüberprüfung' },
-          { english: 'Neurological Assessment', arabic: 'تقييم العصبي', german: 'Neurologische Beurteilung' }
+          { english: 'Neurological Assessment', arabic: 'تقييم عصبي', german: 'Neurologische Beurteilung' }
         ],
         suggestedDoctorQuestions: [
-          'What is the recommended diagnostic imaging?',
-          'Are there any lifestyle or medication adjustments required?',
-          'Is a follow-up second opinion from a German specialist advised?'
+          currentLang === 'ar' ? 'ما هي الفحوصات الشعاعية الموصى بها؟' : 'What is the recommended diagnostic imaging?',
+          currentLang === 'ar' ? 'هل هناك توصيات بخصوص الأدوية أو نمط الحياة؟' : 'Are there any lifestyle or medication adjustments required?',
+          currentLang === 'ar' ? 'هل تنصح برأي طبي ثانٍ من استشاري في ألمانيا؟' : 'Is a follow-up second opinion from a German specialist advised?'
         ]
       });
     } catch (err) {
@@ -77,14 +77,14 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
         <div className="p-6 border-b border-slate-800 space-y-2">
           <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-bold">
             <Sparkles className="w-4 h-4 text-teal-400" />
-            <span>Gemini 3.8 Flash AI Pre-Consultation Assistant</span>
+            <span>{t.geminiAiAssistantTag}</span>
           </div>
 
           <h3 className="text-xl font-bold text-white">
-            Describe Symptoms in Any Language (AR / DE / EN)
+            {t.describeSymptomsTitle}
           </h3>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Gemini AI will organize your health complaints into a clinical pre-consultation report translated for Jordanian & German specialists.
+            {t.describeSymptomsDesc}
           </p>
         </div>
 
@@ -94,20 +94,20 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
           <form onSubmit={handleAnalyze} className="space-y-3">
             <VoiceNoteRecorder
               currentLang={currentLang}
-              label="Record Voice Symptom Note (AI Transcribed)"
+              label={t.recordVoiceNoteLabel}
               onTranscriptionComplete={(text) => {
                 setInputPrompt(prev => prev ? `${prev}\n\n[Voice Note]: ${text}` : text);
               }}
             />
 
             <label className="font-bold text-slate-200 block text-xs">
-              Enter your current symptoms, medical questions, or history:
+              {t.enterSymptomsLabel}
             </label>
 
             <textarea
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
-              placeholder="e.g. ألم في الصدر عند المشي المسافات الطويلة مع ضيق في التنفس / Ich habe seit 2 Wochen chronische Rückenschmerzen..."
+              placeholder={t.symptomsInputPlaceholder}
               rows={4}
               className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-teal-500 leading-relaxed"
             />
@@ -120,12 +120,12 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Processing Clinical AI Translation...</span>
+                  <span>{t.processingAiTranslation}</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-teal-200" />
-                  <span>Generate Doctor Pre-Consultation Report</span>
+                  <span>{t.generateDoctorReportBtn}</span>
                 </>
               )}
             </button>
@@ -136,32 +136,34 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-4 text-slate-200">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <span className="font-bold text-teal-400 flex items-center gap-1.5">
-                  <Bot className="w-4 h-4 text-teal-400" /> Structured Clinical Intake Report
+                  <Bot className="w-4 h-4 text-teal-400" /> {t.structuredIntakeReportHeader}
                 </span>
                 <span className="text-[10px] text-emerald-400 bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded font-bold">
-                  Ready for Doctor
+                  {t.readyForDoctorBadge}
                 </span>
               </div>
 
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Primary Concern</span>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">{t.primaryConcernLabel}</span>
                 <p className="font-semibold text-white text-xs">{analysisResult.chiefComplaint}</p>
               </div>
 
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Bilingual Clinical Summary</span>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">{t.bilingualSummaryLabel}</span>
                 <p className="text-slate-300 leading-relaxed text-xs">{analysisResult.clinicalSummary}</p>
               </div>
 
               {analysisResult.keyMedicalTerms && (
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1.5">Translated Medical Terms</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1.5">{t.translatedMedicalTermsLabel}</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {analysisResult.keyMedicalTerms.map((term: any, idx: number) => (
                       <div key={idx} className="bg-slate-900 border border-slate-800 p-2 rounded-lg text-[11px] space-y-0.5">
-                        <span className="text-teal-300 font-bold block">🇬🇧 {term.english}</span>
-                        <span className="text-amber-300 block">🇯🇴 {term.arabic}</span>
-                        <span className="text-sky-300 block">🇩🇪 {term.german}</span>
+                        <span className="font-bold text-teal-300 block">{term.english}</span>
+                        <div className="text-slate-400 flex items-center justify-between text-[10px]">
+                          <span>🇦🇪 {term.arabic}</span>
+                          <span>🇩🇪 {term.german}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -170,38 +172,16 @@ export const AiSymptomAssistant: React.FC<AiSymptomAssistantProps> = ({
 
               {analysisResult.suggestedDoctorQuestions && (
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Suggested Discussion Questions for Doctor</span>
-                  <ul className="space-y-1 text-slate-300 text-[11px]">
-                    {analysisResult.suggestedDoctorQuestions.map((q: string, i: number) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-teal-400 font-bold">•</span>
-                        <span>{q}</span>
-                      </li>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">{t.recommendedDoctorQuestionsLabel}</span>
+                  <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
+                    {analysisResult.suggestedDoctorQuestions.map((q: string, idx: number) => (
+                      <li key={idx}>{q}</li>
                     ))}
                   </ul>
                 </div>
               )}
-
-              <div className="pt-2 border-t border-slate-800 flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    onClose();
-                    if (onSelectDoctorToBook) onSelectDoctorToBook();
-                  }}
-                  className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center gap-1.5"
-                >
-                  <Stethoscope className="w-4 h-4" />
-                  <span>Book Consultation With This Intake</span>
-                </button>
-              </div>
-
             </div>
           )}
-
-          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <span>Note: This AI tool provides administrative pre-consultation intake summaries for physicians and does not replace direct medical advice from a licensed medical consultant.</span>
-          </div>
 
         </div>
 

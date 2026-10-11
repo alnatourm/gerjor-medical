@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { CountryCode, LanguageCode, CurrencyCode, Doctor, ConsultationType, Specialty, Appointment } from '../types';
+import { CountryCode, LanguageCode, CurrencyCode, Doctor, Specialty, Appointment } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
 import { MOCK_DOCTORS } from '../data/mockData';
 import { VoiceNoteRecorder } from './VoiceNoteRecorder';
-import { Globe, FileUp, Calendar, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Stethoscope, Clock, Award, Building, User, ChevronRight, Upload, Loader2, ArrowLeft } from 'lucide-react';
+import { Globe, FileUp, Calendar, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Stethoscope, Clock, Award, Building, User, ChevronRight, Upload, Loader2, ArrowLeft, Camera, FlaskConical, FileText, Image as ImageIcon, X, Check } from 'lucide-react';
 
 interface CountrySelectionFlowProps {
   currentLang: LanguageCode;
@@ -49,14 +49,30 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
 
   // Filtered doctors for chosen country
   const countryDoctors = MOCK_DOCTORS.filter(d => d.country === selectedCountry);
-  const displayDoctors = selectedSpecialty === 'ALL' 
-    ? countryDoctors 
-    : countryDoctors.filter(d => d.specialty === selectedSpecialty);
 
-  const handleSimulatedFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Document Attachment Categories: 'lab_report' | 'doctor_report' | 'photo' | 'mri'
+  const [uploadCategory, setUploadCategory] = useState<'lab_report' | 'doctor_report' | 'photo' | 'mri'>('lab_report');
+  const [attachedFilesList, setAttachedFilesList] = useState<Array<{ id: string; name: string; category: string; size: string; previewUrl?: string }>>([]);
+
+  const handleSimulatedFileUpload = (e: React.ChangeEvent<HTMLInputElement>, categoryOverride?: 'lab_report' | 'doctor_report' | 'photo' | 'mri') => {
     if (e.target.files && e.target.files[0]) {
-      setFileName(e.target.files[0].name);
+      const file = e.target.files[0];
+      const cat = categoryOverride || uploadCategory;
+      const newFile = {
+        id: `file-${Date.now()}-${Math.random()}`,
+        name: file.name,
+        category: cat,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
+      };
+      setAttachedFilesList(prev => [...prev, newFile]);
+      setFileName(file.name);
     }
+  };
+
+  const removeAttachedFile = (idToRemove: string) => {
+    setAttachedFilesList(prev => prev.filter(f => f.id !== idToRemove));
+    if (attachedFilesList.length <= 1) setFileName('');
   };
 
   const handleRunAiCaseTriage = async (e: React.FormEvent) => {
@@ -76,7 +92,11 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
       const data = await response.json();
       setAiTriageResult(data.data || {
         chiefComplaint: caseTitle || 'Complex Medical Review Request',
-        clinicalSummary: `Case submitted for ${selectedCountry === 'DE' ? 'German' : 'Jordanian'} medical board evaluation. High priority review assigned.`,
+        clinicalSummary: currentLang === 'ar'
+          ? `تم رفع الحالة الطبية لتقييم المجلس الطبي في ${selectedCountry === 'DE' ? 'ألمانيا' : 'الأردن'}. تم تعيين المراجعة بأولوية عالية.`
+          : (currentLang === 'de'
+            ? `Fall für die Bewertung des Medizinalausschusses in ${selectedCountry === 'DE' ? 'Deutschland' : 'Jordanien'} eingereicht. Hohe Priorität zugewiesen.`
+            : `Case submitted for ${selectedCountry === 'DE' ? 'German' : 'Jordanian'} medical board evaluation. High priority review assigned.`),
         keyMedicalTerms: [
           { english: 'Diagnostic Evaluation', arabic: 'تقييم تشخيصي', german: 'Diagnostische Auswertung' }
         ],
@@ -136,15 +156,15 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3.5 py-1 rounded-full text-xs font-semibold">
             <Sparkles className="w-4 h-4 text-teal-400" />
-            <span>Cross-Border Direct Medical Gateway</span>
+            <span>{t.crossBorderGatewayTag}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight font-sans">
-            Direct Specialist Medical Care Between Jordan & Germany
+            {t.directCareTitle}
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            Follow our 2-step direct gateway: Select your preferred consultancy country corridor, then upload your medical case or request an appointment directly.
+            {t.directCareSubtitle}
           </p>
 
           {/* Flow Stepper Bar */}
@@ -157,26 +177,26 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   : 'bg-slate-800 text-slate-300 hover:text-white'
               }`}
             >
-              <span>1. Choose Consultancy Location</span>
+              <span>{t.step1ChooseLocation}</span>
               {selectedCountry && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
             </button>
 
-            <span className="text-slate-600">➔</span>
+            <span className="text-slate-600">{isRtl ? '⬅' : '➔'}</span>
 
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
               selectedCountry !== null && selectedPath === null
                 ? 'bg-teal-500 text-slate-950 font-extrabold ring-2 ring-teal-400/40 shadow-lg'
                 : (selectedPath !== null ? 'bg-slate-800 text-teal-300' : 'bg-slate-800/50 text-slate-500')
             }`}>
-              <span>2. Upload File or Request Appointment</span>
+              <span>{t.step2UploadOrAppointment}</span>
               {selectedPath && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
             </div>
 
             {selectedPath && (
               <>
-                <span className="text-slate-600">➔</span>
+                <span className="text-slate-600">{isRtl ? '⬅' : '➔'}</span>
                 <div className="bg-teal-500 text-slate-950 font-extrabold px-3 py-1.5 rounded-full shadow-lg">
-                  3. Specialist Review
+                  {t.step3SpecialistReview}
                 </div>
               </>
             )}
@@ -187,7 +207,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
         {selectedCountry === null && (
           <div className="space-y-6 max-w-5xl mx-auto">
             <h2 className="text-center text-xs font-bold uppercase tracking-wider text-slate-400">
-              STEP 1: SELECT YOUR CONSULTANCY COUNTRY CORRIDOR
+              {t.step1Header}
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -203,40 +223,40 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   <div className="flex items-center gap-3">
                     <span className="text-4xl">🇩🇪</span>
                     <div>
-                      <span className="text-xs font-bold text-sky-400 uppercase tracking-widest block">German Consultancy</span>
+                      <span className="text-xs font-bold text-sky-400 uppercase tracking-widest block">{t.germanConsultancyBadge}</span>
                       <h3 className="text-2xl font-extrabold text-white group-hover:text-sky-300 transition-colors">
-                        Consult Doctors in Germany
+                        {t.consultDoctorsInGermany}
                       </h3>
                     </div>
                   </div>
 
                   <span className="p-2 rounded-xl bg-sky-500/20 text-sky-300 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all">
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
                   </span>
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Direct access to leading professors, chief physicians, and research directors at <strong>Charité University Medicine Berlin</strong>, <strong>Heidelberg University Clinics</strong>, and <strong>LMU Munich Hospital</strong>.
+                  {t.germanConsultancyDesc}
                 </p>
 
                 <div className="space-y-2 border-t border-slate-800 pt-4 text-xs text-slate-300">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span>Neuro-oncology, Complex Cardiac & GI Cancer Specialists</span>
+                    <span>{t.germanFeature1}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span>German Medical Council Certified (Facharzt / Professor)</span>
+                    <span>{t.germanFeature2}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span>Real-time German-Arabic-English AI live translation</span>
+                    <span>{t.germanFeature3}</span>
                   </div>
                 </div>
 
                 <button className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-slate-950 font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-sky-900/30">
-                  <span>Select German Consultancy 🇩🇪</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>{t.selectGermanConsultancyBtn}</span>
+                  <ChevronRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
@@ -251,40 +271,40 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   <div className="flex items-center gap-3">
                     <span className="text-4xl">🇯🇴</span>
                     <div>
-                      <span className="text-xs font-bold text-amber-400 uppercase tracking-widest block">Jordan Consultancy</span>
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-widest block">{t.jordanConsultancyBadge}</span>
                       <h3 className="text-2xl font-extrabold text-white group-hover:text-amber-300 transition-colors">
-                        Consult Doctors in Jordan
+                        {t.consultDoctorsInJordan}
                       </h3>
                     </div>
                   </div>
 
                   <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
                   </span>
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Consult top Middle Eastern specialists and surgeons at <strong>King Hussein Medical Center</strong>, <strong>Amman Specialty Hospital</strong>, and <strong>Abdali Medical Center</strong> in Amman.
+                  {t.jordanConsultancyDesc}
                 </p>
 
                 <div className="space-y-2 border-t border-slate-800 pt-4 text-xs text-slate-300">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Pediatric Cardiology, Robotic Orthopedics & Laser Dermatology</span>
+                    <span>{t.jordanFeature1}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Jordan Medical Council & UK Royal College Board Certified</span>
+                    <span>{t.jordanFeature2}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Synchronous Amman (EET) / European (CET) Scheduling</span>
+                    <span>{t.jordanFeature3}</span>
                   </div>
                 </div>
 
                 <button className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-amber-900/30">
-                  <span>Select Jordan Consultancy 🇯🇴</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>{t.selectJordanConsultancyBtn}</span>
+                  <ChevronRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
@@ -300,9 +320,9 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{selectedCountry === 'DE' ? '🇩🇪' : '🇯🇴'}</span>
                 <div>
-                  <span className="text-xs font-bold text-teal-300 block">Active Selected Corridor</span>
+                  <span className="text-xs font-bold text-teal-300 block">{t.activeSelectedCorridor}</span>
                   <span className="text-sm font-bold text-white">
-                    {selectedCountry === 'DE' ? 'Germany Consultancy (Berlin, Heidelberg, Munich)' : 'Jordan Consultancy (Amman Medical Hub)'}
+                    {selectedCountry === 'DE' ? t.germanyCorridorTitle : t.jordanCorridorTitle}
                   </span>
                 </div>
               </div>
@@ -311,12 +331,12 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 onClick={() => setSelectedCountry(null)}
                 className="text-xs font-semibold text-slate-400 hover:text-white underline"
               >
-                Change Country
+                {t.changeCountryBtn}
               </button>
             </div>
 
             <h2 className="text-center text-xs font-bold uppercase tracking-wider text-slate-400">
-              STEP 2: WHAT WOULD YOU LIKE TO DO NEXT?
+              {t.step2Header}
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -332,17 +352,17 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   </div>
 
                   <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors">
-                    Upload Your Medical Case File
+                    {t.uploadMedicalCaseTitle}
                   </h3>
 
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Upload Brain MRIs, X-Rays, Lab Reports, or CT scans. Gemini 3.8 Flash AI will analyze your case and match you with 3 expert {selectedCountry === 'DE' ? 'German' : 'Jordanian'} consultants.
+                    {t.uploadMedicalCaseDesc}
                   </p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs text-teal-400 font-bold">
-                  <span>Fast Case Review (24h)</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>{t.fastCaseReviewBadge}</span>
+                  <ChevronRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
                 </div>
               </div>
 
@@ -357,17 +377,17 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   </div>
 
                   <h3 className="text-xl font-bold text-white group-hover:text-sky-300 transition-colors">
-                    Ask for an Appointment
+                    {t.askForAppointmentTitle}
                   </h3>
 
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Browse doctors from {selectedCountry === 'DE' ? 'Germany' : 'Jordan'}, view live dual-timezone time slots, and schedule a video consultation or second opinion call directly.
+                    {t.askForAppointmentDesc}
                   </p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs text-sky-400 font-bold">
-                  <span>Direct Doctor Scheduling</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>{t.directDoctorSchedulingBadge}</span>
+                  <ChevronRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
                 </div>
               </div>
 
@@ -383,33 +403,33 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
             <div className="flex items-center justify-between border-b border-slate-700 pb-4">
               <div className="flex items-center gap-2">
                 <button onClick={() => setSelectedPath(null)} className="text-slate-400 hover:text-white text-xs font-semibold flex items-center gap-1">
-                  <ArrowLeft className="w-4 h-4" /> Back
+                  <ArrowLeft className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} /> {t.backBtn}
                 </button>
                 <span className="text-slate-600">|</span>
                 <span className="text-xs font-bold text-teal-400">
-                  {selectedCountry === 'DE' ? '🇩🇪 German Medical Board Case Review' : '🇯🇴 Jordan Specialist Case Review'}
+                  {selectedCountry === 'DE' ? `🇩🇪 ${t.germanMedicalBoardCaseReview}` : `🇯🇴 ${t.jordanSpecialistCaseReview}`}
                 </span>
               </div>
 
-              <span className="text-xs text-slate-400">Step 3 of 3</span>
+              <span className="text-xs text-slate-400">{t.step3Of3}</span>
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-xl font-bold text-white">Upload Diagnostic Case File & History</h2>
+              <h2 className="text-xl font-bold text-white">{t.uploadDiagnosticCaseTitle}</h2>
               <p className="text-xs text-slate-300">
-                Attach your medical reports, MRIs, or lab results. AI will translate medical terms and structure the intake for {selectedCountry === 'DE' ? 'German' : 'Jordanian'} doctors.
+                {t.uploadDiagnosticCaseDesc}
               </p>
             </div>
 
             <form onSubmit={handleRunAiCaseTriage} className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-slate-200 block mb-1">Case Title or Main Complaint</label>
+                <label className="font-bold text-slate-200 block mb-1">{t.caseTitleLabel}</label>
                 <input
                   type="text"
                   required
                   value={caseTitle}
                   onChange={(e) => setCaseTitle(e.target.value)}
-                  placeholder="e.g. Brain MRI Second Opinion / Cardiac Valve Review Request"
+                  placeholder={t.caseTitlePlaceholder}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-teal-500"
                 />
               </div>
@@ -417,42 +437,201 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
               {/* Voice Note Recorder Integration */}
               <VoiceNoteRecorder
                 currentLang={currentLang}
-                label="Record Voice Symptom Note (AI Transcribed)"
+                label={t.recordVoiceNoteLabel}
                 onTranscriptionComplete={(text) => {
-                  setCaseSymptoms(prev => prev ? `${prev}\n\n[Voice Note Transcribed]: ${text}` : text);
+                  setCaseSymptoms(prev => prev ? `${prev}\n\n[${t.recordVoiceNoteLabel}]: ${text}` : text);
                 }}
               />
 
               <div>
-                <label className="font-bold text-slate-200 block mb-1">Detailed Symptoms & Medical History</label>
+                <label className="font-bold text-slate-200 block mb-1">{t.detailedSymptomsLabel}</label>
                 <textarea
                   required
                   value={caseSymptoms}
                   onChange={(e) => setCaseSymptoms(e.target.value)}
                   rows={3}
-                  placeholder="Describe onset, duration, previous treatments, and specific questions..."
+                  placeholder={t.detailedSymptomsPlaceholder}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-teal-500 leading-relaxed"
                 />
               </div>
 
-              {/* Upload Drop Zone */}
-              <div className="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center bg-slate-900/60 hover:border-teal-500 transition-colors">
-                <Upload className="w-8 h-8 text-teal-400 mx-auto mb-2" />
-                <span className="text-xs font-bold text-white block">Upload Medical Reports / MRI DICOM / PDF</span>
-                <span className="text-[11px] text-slate-400 block mb-3">Supported: PDF, JPG, PNG, DICOM (Max 50MB)</span>
-                
-                <input
-                  type="file"
-                  id="case-file"
-                  onChange={handleSimulatedFileUpload}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="case-file"
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 font-bold text-xs rounded-xl cursor-pointer inline-block border border-slate-700"
-                >
-                  {fileName ? `File Selected: ${fileName}` : 'Choose File from Device'}
+              {/* 3 Document Category Selector & Upload Options */}
+              <div className="space-y-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-700/80">
+                <label className="font-bold text-slate-200 block text-xs">
+                  {t.selectUploadTypeLabel}
                 </label>
+
+                {/* Document Type Selector Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Option 1: Report for Lab */}
+                  <button
+                    type="button"
+                    onClick={() => setUploadCategory('lab_report')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all text-xs ${
+                      uploadCategory === 'lab_report'
+                        ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200 ring-2 ring-emerald-500/20 font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <FlaskConical className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-white text-xs">{t.labReportBadge}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                        {currentLang === 'ar' ? 'نتائج فحص الدم والتحاليل المخبرية' : 'Blood work, pathology, urine & lab test results'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Option 2: Report from Doctor */}
+                  <button
+                    type="button"
+                    onClick={() => setUploadCategory('doctor_report')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all text-xs ${
+                      uploadCategory === 'doctor_report'
+                        ? 'bg-sky-950/80 border-sky-500 text-sky-200 ring-2 ring-sky-500/20 font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <FileText className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-white text-xs">{t.doctorReportBadge}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                        {currentLang === 'ar' ? 'التقرير الطبي وملخص تشخيص الطبيب' : 'Specialist clinical notes, diagnosis & discharge letter'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Option 3: Upload Photo */}
+                  <button
+                    type="button"
+                    onClick={() => setUploadCategory('photo')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all text-xs ${
+                      uploadCategory === 'photo'
+                        ? 'bg-purple-950/80 border-purple-500 text-purple-200 ring-2 ring-purple-500/20 font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <Camera className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-white text-xs">{t.photoBadge}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                        {currentLang === 'ar' ? 'صورة تقرير ورقي أو الفحص الظاهري' : 'Clear photo of paper report, note or affected area'}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Upload Action Box */}
+                <div className="border-2 border-dashed border-slate-700 rounded-2xl p-5 text-center bg-slate-950/70 hover:border-teal-500 transition-colors space-y-3">
+                  <div className="flex items-center justify-center gap-2">
+                    {uploadCategory === 'lab_report' && <FlaskConical className="w-6 h-6 text-emerald-400" />}
+                    {uploadCategory === 'doctor_report' && <FileText className="w-6 h-6 text-sky-400" />}
+                    {uploadCategory === 'photo' && <Camera className="w-6 h-6 text-purple-400" />}
+                    {uploadCategory === 'mri' && <Upload className="w-6 h-6 text-teal-400" />}
+                  </div>
+
+                  <div>
+                    <span className="text-xs font-bold text-white block">
+                      {uploadCategory === 'lab_report' && t.uploadLabReportOption}
+                      {uploadCategory === 'doctor_report' && t.uploadDoctorReportOption}
+                      {uploadCategory === 'photo' && t.uploadPhotoOption}
+                      {uploadCategory === 'mri' && t.uploadMriOption}
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">{t.uploadDropzoneSupported}</span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    {/* Choose File Button */}
+                    <input
+                      type="file"
+                      id="case-file-upload-input"
+                      accept={uploadCategory === 'photo' ? 'image/*' : 'application/pdf,image/*,.dicom,.doc,.docx'}
+                      onChange={(e) => handleSimulatedFileUpload(e, uploadCategory)}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="case-file-upload-input"
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5 border border-slate-700 shadow-sm"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-teal-400" />
+                      <span>{t.chooseFileBtn}</span>
+                    </label>
+
+                    {/* Camera Photo Capture Direct Action Button */}
+                    <input
+                      type="file"
+                      id="case-photo-camera-capture"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => handleSimulatedFileUpload(e, 'photo')}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="case-photo-camera-capture"
+                      className="px-4 py-2 bg-purple-900/60 hover:bg-purple-800 text-purple-200 font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5 border border-purple-700/60 shadow-sm"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-purple-300" />
+                      <span>{t.uploadPhotoActionBtn}</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Display List of Attached Files with Badges */}
+                {attachedFilesList.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <span className="text-[11px] font-bold text-slate-300 block">
+                      {currentLang === 'ar' ? 'الملفات المرفقة لتقرير الحالة:' : 'Attached Diagnostic Files & Reports:'} ({attachedFilesList.length})
+                    </span>
+
+                    <div className="grid gap-2">
+                      {attachedFilesList.map(item => (
+                        <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-3 animate-fade-in">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {item.previewUrl ? (
+                              <img src={item.previewUrl} alt="Preview" className="w-9 h-9 rounded-lg object-cover border border-slate-700 shrink-0 bg-slate-900" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-teal-400">
+                                {item.category === 'lab_report' && <FlaskConical className="w-4 h-4 text-emerald-400" />}
+                                {item.category === 'doctor_report' && <FileText className="w-4 h-4 text-sky-400" />}
+                                {item.category === 'photo' && <Camera className="w-4 h-4 text-purple-400" />}
+                                {item.category === 'mri' && <Upload className="w-4 h-4 text-teal-400" />}
+                              </div>
+                            )}
+
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold text-white block truncate" title={item.name}>
+                                {item.name}
+                              </span>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                <span className={`px-1.5 py-0.2 rounded font-semibold ${
+                                  item.category === 'lab_report' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
+                                  item.category === 'doctor_report' ? 'bg-sky-950 text-sky-300 border border-sky-800' :
+                                  item.category === 'photo' ? 'bg-purple-950 text-purple-300 border border-purple-800' :
+                                  'bg-slate-800 text-teal-300 border border-slate-700'
+                                }`}>
+                                  {item.category === 'lab_report' && t.labReportBadge}
+                                  {item.category === 'doctor_report' && t.doctorReportBadge}
+                                  {item.category === 'photo' && t.photoBadge}
+                                  {item.category === 'mri' && t.mriBadge}
+                                </span>
+                                <span>{item.size}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removeAttachedFile(item.id)}
+                            className="p-1 rounded-lg hover:bg-rose-950 text-slate-500 hover:text-rose-400 transition-colors"
+                            title="Remove file"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -463,12 +642,12 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 {isAnalyzingFile ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Analyzing Case with Gemini 3.8 AI...</span>
+                    <span>{t.analyzingCaseWithAi}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 text-teal-200" />
-                    <span>Analyze Case & Match {selectedCountry === 'DE' ? 'German' : 'Jordanian'} Doctors</span>
+                    <span>{t.analyzeCaseAndMatchBtn}</span>
                   </>
                 )}
               </button>
@@ -479,15 +658,15 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-4 text-xs animate-fade-in">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                   <span className="font-bold text-teal-400 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4" /> AI Case Triage Report
+                    <Sparkles className="w-4 h-4" /> {t.aiCaseTriageReport}
                   </span>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Ready</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">{t.readyStatus}</span>
                 </div>
 
                 <p className="text-slate-300 leading-relaxed">{aiTriageResult.clinicalSummary}</p>
 
                 <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <span className="font-bold text-slate-200 block">Recommended {selectedCountry === 'DE' ? 'German' : 'Jordanian'} Specialists for Your Case:</span>
+                  <span className="font-bold text-slate-200 block">{t.recommendedSpecialistsForCase}</span>
                   
                   <div className="grid sm:grid-cols-2 gap-3">
                     {countryDoctors.slice(0, 2).map(doc => (
@@ -502,7 +681,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                       >
                         <span className="font-bold text-white block">{doc.name}</span>
                         <span className="text-slate-400 text-[11px] block">{doc.specialty} · {doc.hospital}</span>
-                        <span className="text-teal-400 text-[10px] font-bold mt-1 block">Next Slot: {doc.nextAvailable}</span>
+                        <span className="text-teal-400 text-[10px] font-bold mt-1 block">{t.nextSlotLabel} {doc.nextAvailable}</span>
                       </div>
                     ))}
                   </div>
@@ -513,7 +692,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Submit Case to {selectedDoctor ? selectedDoctor.name : countryDoctors[0]?.name}</span>
+                  <span>{t.submitCaseToBtn} {selectedDoctor ? selectedDoctor.name : countryDoctors[0]?.name}</span>
                 </button>
               </div>
             )}
@@ -528,15 +707,15 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
             <div className="flex items-center justify-between border-b border-slate-700 pb-4">
               <div className="flex items-center gap-2">
                 <button onClick={() => setSelectedPath(null)} className="text-slate-400 hover:text-white text-xs font-semibold flex items-center gap-1">
-                  <ArrowLeft className="w-4 h-4" /> Back
+                  <ArrowLeft className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} /> {t.backBtn}
                 </button>
                 <span className="text-slate-600">|</span>
                 <span className="text-xs font-bold text-sky-400">
-                  {selectedCountry === 'DE' ? '🇩🇪 German Medical Corridor Appointment' : '🇯🇴 Jordan Medical Corridor Appointment'}
+                  {selectedCountry === 'DE' ? `🇩🇪 ${t.germanMedicalCorridorAppointment}` : `🇯🇴 ${t.jordanMedicalCorridorAppointment}`}
                 </span>
               </div>
 
-              <span className="text-xs text-slate-400">Step 3 of 3</span>
+              <span className="text-xs text-slate-400">{t.step3Of3}</span>
             </div>
 
             {/* PHASE 1: IF DOCTOR HAS NOT BEEN ASSIGNED YET -> CHOOSE SPECIALTY & BRIEF CASE */}
@@ -545,26 +724,26 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-bold px-3 py-1 rounded-full">
                     <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Specialty Triage & Case Brief</span>
+                    <span>{t.specialtyTriageTag}</span>
                   </div>
 
-                  <h2 className="text-xl font-bold text-white">Select Required Specialty & Brief Your Case</h2>
+                  <h2 className="text-xl font-bold text-white">{t.selectRequiredSpecialtyTitle}</h2>
                   <p className="text-xs text-slate-300">
-                    Choose the required medical specialty and brief your symptoms or condition. Our clinical engine will automatically assign the best-matched {selectedCountry === 'DE' ? 'German' : 'Jordanian'} consultant.
+                    {t.selectRequiredSpecialtyDesc}
                   </p>
                 </div>
 
                 {/* Specialty Selection Grid */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-200 block">1. Select Medical Specialty Needed:</label>
+                  <label className="text-xs font-bold text-slate-200 block">{t.selectMedicalSpecialtyLabel}</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                     {[
-                      { name: 'Neurology', label: '🧠 Neurology (Brain/Nerves)', desc: 'Headaches, Stroke, Tumors' },
-                      { name: 'Cardiology', label: '🫀 Cardiology (Heart)', desc: 'Valve, Surgery, Arrhythmia' },
-                      { name: 'Orthopedics', label: '🦴 Orthopedics (Joints/Spine)', desc: 'Knee, Hip, Spinal Care' },
-                      { name: 'Oncology', label: '🎗️ Oncology (Cancer Care)', desc: 'Molecular & Targeted Therapy' },
-                      { name: 'Pediatrics', label: '👶 Pediatrics (Children)', desc: 'Child & Congenital Care' },
-                      { name: 'Dermatology', label: '🩺 Dermatology (Skin)', desc: 'Skin, Laser, Biologics' }
+                      { name: 'Neurology', label: t.neurologyLabel, desc: t.neurologyDesc },
+                      { name: 'Cardiology', label: t.cardiologyLabel, desc: t.cardiologyDesc },
+                      { name: 'Orthopedics', label: t.orthopedicsLabel, desc: t.orthopedicsDesc },
+                      { name: 'Oncology', label: t.oncologyLabel, desc: t.oncologyDesc },
+                      { name: 'Pediatrics', label: t.pediatricsLabel, desc: t.pediatricsDesc },
+                      { name: 'Dermatology', label: t.dermatologyLabel, desc: t.dermatologyDesc }
                     ].map(spec => (
                       <button
                         key={spec.name}
@@ -585,12 +764,12 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
 
                 {/* Case Brief & File / Voice Note Input */}
                 <div className="space-y-3 pt-2">
-                  <label className="text-xs font-bold text-slate-200 block">2. Brief Summary & Attach Medical Files / Voice Note:</label>
+                  <label className="text-xs font-bold text-slate-200 block">{t.briefSummaryAndAttachLabel}</label>
 
                   {/* Voice Note Recorder Integration */}
                   <VoiceNoteRecorder
                     currentLang={currentLang}
-                    label="Record Voice Symptom Note (AI Transcribed)"
+                    label={t.recordVoiceNoteLabel}
                     onTranscriptionComplete={(text) => {
                       setCaseSymptoms(prev => prev ? `${prev}\n\n[Voice Note]: ${text}` : text);
                     }}
@@ -600,9 +779,9 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   <div className="border-2 border-dashed border-slate-700 rounded-2xl p-4 text-center bg-slate-900/60 hover:border-teal-500 transition-colors">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <Upload className="w-5 h-5 text-teal-400" />
-                      <span className="text-xs font-bold text-white">Attach Medical File / MRI Scan (Optional)</span>
+                      <span className="text-xs font-bold text-white">{t.attachMedicalFileOptional}</span>
                     </div>
-                    <span className="text-[11px] text-slate-400 block mb-2">Attach PDF reports, lab results, or imaging scans</span>
+                    <span className="text-[11px] text-slate-400 block mb-2">{t.attachPdfReportsDesc}</span>
                     
                     <input
                       type="file"
@@ -614,7 +793,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                       htmlFor="appointment-file"
                       className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-teal-300 font-bold text-xs rounded-xl cursor-pointer inline-block border border-slate-700 transition-colors"
                     >
-                      {fileName ? `Attached: ${fileName}` : '📎 Attach File / Medical Record'}
+                      {fileName ? `${t.fileSelectedPrefix} ${fileName}` : t.attachFileRecordBtn}
                     </label>
                   </div>
 
@@ -623,7 +802,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                     value={caseSymptoms}
                     onChange={(e) => setCaseSymptoms(e.target.value)}
                     rows={3}
-                    placeholder="Briefly describe your symptoms, duration, or main questions for the appointment..."
+                    placeholder={t.briefSymptomsPlaceholder}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-teal-500 leading-relaxed"
                   />
                 </div>
@@ -638,7 +817,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   className="w-full py-3.5 bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Assign Best-Matched Specialist in {selectedCountry === 'DE' ? 'Germany 🇩🇪' : 'Jordan 🇯🇴'}</span>
+                  <span>{t.assignBestMatchedSpecialistBtn} {selectedCountry === 'DE' ? 'Germany 🇩🇪' : 'Jordan 🇯🇴'}</span>
                 </button>
               </div>
             ) : (
@@ -647,12 +826,12 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Specialist Successfully Assigned By System</span>
+                    <span>{t.specialistAssignedSuccess}</span>
                   </div>
 
-                  <h2 className="text-xl font-bold text-white">Assigned {selectedDoctor.specialty} Specialist</h2>
+                  <h2 className="text-xl font-bold text-white">{t.assignedSpecialistHeader} ({t[selectedDoctor.specialty] || selectedDoctor.specialty})</h2>
                   <p className="text-xs text-slate-300">
-                    Based on your selected specialty (<strong>{selectedDoctor.specialty}</strong>) and case brief, the system has automatically assigned the highest-rated consultant in {selectedDoctor.country === 'DE' ? 'Germany' : 'Jordan'}.
+                    {t.assignedSpecialistDesc} <strong>{selectedDoctor.country === 'DE' ? t.germany : t.jordan}</strong>.
                   </p>
                 </div>
 
@@ -663,7 +842,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded">
-                          🎯 99% Best Clinical Match ({selectedDoctor.specialty})
+                          {t.bestClinicalMatchBadge} ({t[selectedDoctor.specialty] || selectedDoctor.specialty})
                         </span>
                         <span className="text-xs text-slate-400">
                           {selectedDoctor.country === 'DE' ? '🇩🇪 Germany' : '🇯🇴 Jordan'} · {selectedDoctor.city}
@@ -676,7 +855,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[10px] text-slate-400 block uppercase">Consultation Fee</span>
+                      <span className="text-[10px] text-slate-400 block uppercase">{t.consultationFeeTitle}</span>
                       <span className="text-lg font-extrabold text-teal-400">
                         {currentCurrency === 'EUR' ? `€${selectedDoctor.feeEur}` : (currentCurrency === 'JOD' ? `${selectedDoctor.feeJod} JOD` : `$${selectedDoctor.feeUsd}`)}
                       </span>
@@ -689,12 +868,12 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
 
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                     <div className="flex items-center justify-between text-slate-300 font-medium">
-                      <span>Assigned Appointment Date:</span>
+                      <span>{t.assignedAppointmentDate}</span>
                       <strong className="text-white">Saturday, Oct 10, 2026</strong>
                     </div>
 
                     <div className="flex items-center justify-between text-slate-300 font-mono">
-                      <span>Synchronized Timings:</span>
+                      <span>{t.synchronizedTimings}</span>
                       <strong className="text-teal-400">🇯🇴 {selectedDoctor.country === 'DE' ? '16:00 EET' : '11:00 EET'} / 🇩🇪 {selectedDoctor.country === 'DE' ? '15:00 CET' : '10:00 CET'}</strong>
                     </div>
                   </div>
@@ -705,7 +884,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                       onClick={() => setSelectedDoctor(null)}
                       className="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
                     >
-                      Change Specialty
+                      {t.changeSpecialtyBtn}
                     </button>
 
                     <button
@@ -714,7 +893,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                       className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Confirm & Book Appointment ({selectedDoctor.name})</span>
+                      <span>{t.confirmAndBookAppointmentBtn} ({selectedDoctor.name})</span>
                     </button>
                   </div>
                 </div>
@@ -732,24 +911,24 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
             </div>
 
             <h2 className="text-2xl font-extrabold text-white">
-              {selectedPath === 'upload_case' ? 'Medical Case Submitted Successfully!' : 'Appointment Request Confirmed!'}
+              {selectedPath === 'upload_case' ? t.caseSubmittedSuccessfully : t.appointmentRequestConfirmed}
             </h2>
 
             <p className="text-xs text-slate-300 leading-relaxed max-w-lg mx-auto">
-              Your request for <strong>{selectedCountry === 'DE' ? 'German Consultancy (Berlin / Heidelberg)' : 'Jordan Consultancy (Amman)'}</strong> with <strong>{selectedDoctor?.name || 'Selected Specialist'}</strong> has been registered.
+              {t.registeredNotification}
             </p>
 
-            <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs space-y-2 text-slate-300 text-left max-w-md mx-auto">
+            <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs space-y-2 text-slate-300 text-left max-w-md mx-auto" dir={isRtl ? 'rtl' : 'ltr'}>
               <div className="flex justify-between">
-                <span className="text-slate-400">Consultancy Hub:</span>
+                <span className="text-slate-400">{t.consultancyHubLabel}</span>
                 <span className="font-bold text-white">{selectedCountry === 'DE' ? '🇩🇪 Germany' : '🇯🇴 Jordan'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Scheduled Time:</span>
+                <span className="text-slate-400">{t.scheduledTimeLabel}</span>
                 <span className="font-bold text-teal-400">🇯🇴 {selectedSlot.amman} EET / 🇩🇪 {selectedSlot.berlin} CET</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Patient:</span>
+                <span className="text-slate-400">{t.patientLabel}</span>
                 <span className="font-bold text-white">{patientName} ({patientPhone})</span>
               </div>
             </div>
@@ -759,7 +938,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 onClick={resetFlow}
                 className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-colors"
               >
-                Start Another Request
+                {t.startAnotherRequestBtn}
               </button>
             </div>
           </div>
