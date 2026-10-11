@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Doctor, CertificateDoc, LanguageCode, CurrencyCode } from '../types';
+import { Doctor, CertificateDoc, LanguageCode, CurrencyCode, Specialty, ConsultationType } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
 import { MOCK_DOCTORS } from '../data/mockData';
 import { 
@@ -32,21 +32,56 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
   const defaultDoc = React.useMemo(() => {
     if (currentUser && currentUser.role === 'doctor') {
       const exactMatch = doctors.find(d => 
-        d.name.toLowerCase().includes(currentUser.fullName.toLowerCase()) || 
-        currentUser.fullName.toLowerCase().includes(d.name.toLowerCase()) ||
-        d.id === currentUser.id
+        d.id === currentUser.id ||
+        d.name.toLowerCase().trim() === currentUser.fullName.toLowerCase().trim()
       );
       if (exactMatch) return exactMatch;
 
-      if (currentUser.fullName?.toLowerCase().includes('layla') || currentUser.fullName?.toLowerCase().includes('khatib')) {
-        return doctors.find(d => d.name.includes('Layla')) || doctors[1] || MOCK_DOCTORS[1];
+      // Handle preset demo accounts
+      if (currentUser.id === 'doc-de-2' || currentUser.fullName?.toLowerCase().includes('sabine')) {
+        return doctors.find(d => d.id === 'doc-de-2') || MOCK_DOCTORS[0];
       }
-      if (currentUser.country === 'JO') {
-        return doctors.find(d => d.country === 'JO') || doctors[1] || MOCK_DOCTORS[1];
+      if (currentUser.id === 'usr-doc-jo-1' || currentUser.fullName?.toLowerCase().includes('layla')) {
+        return doctors.find(d => d.id === 'usr-doc-jo-1') || MOCK_DOCTORS[1];
       }
-      return doctors.find(d => d.name.includes('Sabine') || d.country === 'DE') || doctors[0] || MOCK_DOCTORS[0];
+
+      // Clean empty doctor profile for a newly registered physician
+      return {
+        id: currentUser.id,
+        name: currentUser.fullName || 'Dr. Physician Consultant',
+        title: '',
+        titleDe: '',
+        titleAr: '',
+        country: (currentUser.country === 'DE' ? 'DE' : 'JO') as 'DE' | 'JO',
+        city: '',
+        hospital: '',
+        hospitalAr: '',
+        hospitalDe: '',
+        specialty: 'Cardiology' as Specialty,
+        subSpecialties: [],
+        languages: [],
+        experienceYears: 0,
+        rating: 5.0,
+        reviewCount: 0,
+        bio: '',
+        bioAr: '',
+        bioDe: '',
+        education: [],
+        certifications: [],
+        certificateDocs: [],
+        feeJod: 0,
+        feeEur: 0,
+        feeUsd: 0,
+        feeFileReviewEur: 0,
+        feeFileReviewJod: 0,
+        avatarUrl: '',
+        nextAvailable: '',
+        availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
+        timeZone: (currentUser.country === 'DE' ? 'Europe/Berlin' : 'Asia/Amman') as 'Europe/Berlin' | 'Asia/Amman',
+        timeZoneOffsetLabel: currentUser.country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
+      };
     }
-    return doctors[2] || doctors[0] || MOCK_DOCTORS[1]; // Dr. Layla Al-Khatib
+    return doctors[0] || MOCK_DOCTORS[0];
   }, [currentUser, doctors]);
 
   const [doctor, setDoctor] = useState<Doctor>(defaultDoc);
@@ -84,16 +119,19 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
   const [newSubSpecText, setNewSubSpecText] = useState('');
 
   // Ensure certificateDocs array is initialized
-  const certDocsList: CertificateDoc[] = doctor.certificateDocs || (
-    doctor.certifications.map((c, i) => ({
-      id: `cert-${i}`,
-      title: c,
-      issuingBody: doctor.country === 'DE' ? 'German Medical Board (Ärztekammer)' : 'Jordan Medical Council / Royal College',
-      year: (2010 + i * 3).toString(),
-      fileName: `${c.replace(/[^a-zA-Z0-9]/g, '_')}_verified.pdf`,
-      fileType: 'pdf'
-    }))
-  );
+  const certDocsList: CertificateDoc[] = doctor.certificateDocs && doctor.certificateDocs.length > 0
+    ? doctor.certificateDocs
+    : (doctor.certifications && doctor.certifications.length > 0
+      ? doctor.certifications.map((c, i) => ({
+          id: `cert-${i}`,
+          title: c,
+          issuingBody: doctor.country === 'DE' ? 'German Medical Association (Ärztekammer)' : 'Jordanian Medical Council (JMC)',
+          year: new Date().getFullYear().toString(),
+          fileName: `${c.replace(/[^a-zA-Z0-9]/g, '_')}_verified.pdf`,
+          fileType: 'pdf'
+        }))
+      : []
+    );
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,16 +354,18 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
               </div>
 
               <h1 className="text-xl sm:text-2xl font-black text-white mt-1">{doctor.name}</h1>
-              <p className="text-xs sm:text-sm text-sky-200 font-medium">{doctor.title}</p>
+              <p className="text-xs sm:text-sm text-sky-200 font-medium">
+                {doctor.title || doctor.specialty || 'Medical Specialist Consultant (Complete Profile Below)'}
+              </p>
               
               <div className="flex items-center gap-4 text-xs text-slate-300 mt-2 flex-wrap">
                 <span className="flex items-center gap-1">
                   <Building className="w-3.5 h-3.5 text-teal-400" />
-                  {doctor.hospital}
+                  {doctor.hospital || 'Hospital / Clinic Affiliation Not Set'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Globe className="w-3.5 h-3.5 text-teal-400" />
-                  {doctor.city}, {doctor.country === 'DE' ? `🇩🇪 ${t.germany}` : `🇯🇴 ${t.jordan}`}
+                  {doctor.city ? `${doctor.city}, ` : ''}{doctor.country === 'DE' ? `🇩🇪 ${t.germany}` : `🇯🇴 ${t.jordan}`}
                 </span>
               </div>
             </div>
@@ -343,7 +383,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
             >
               {doctors.map(d => (
                 <option key={d.id} value={d.id}>
-                  {d.country === 'DE' ? '🇩🇪' : '🇯🇴'} {d.name} ({d.specialty})
+                  {d.country === 'DE' ? '🇩🇪' : '🇯🇴'} {d.name} {d.specialty ? `(${d.specialty})` : ''}
                 </option>
               ))}
             </select>
@@ -414,11 +454,12 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
 
             <div className="grid sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="font-bold text-slate-800 block mb-1">{t.fullPhysicianName}</label>
+                <label className="font-bold text-slate-800 block mb-1">{t.fullPhysicianName} *</label>
                 <input
                   type="text"
                   value={doctor.name}
                   onChange={(e) => setDoctor({ ...doctor, name: e.target.value })}
+                  placeholder="e.g. Dr. Full Name"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
                   required
                 />
@@ -429,9 +470,9 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                 <input
                   type="text"
                   value={doctor.title}
-                  onChange={(e) => setDoctor({ ...doctor, title: e.target.value })}
+                  onChange={(e) => setDoctor({ ...doctor, title: e.target.value, specialty: (e.target.value as Specialty) })}
+                  placeholder="e.g. Senior Consultant in Cardiology"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                  required
                 />
               </div>
 
@@ -441,18 +482,19 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                   type="text"
                   value={doctor.hospital}
                   onChange={(e) => setDoctor({ ...doctor, hospital: e.target.value })}
+                  placeholder="e.g. King Hussein Medical Center or Charité Berlin"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                  required
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-800 block mb-1">{t.clinicalPracticeLocation}</label>
+                <label className="font-bold text-slate-800 block mb-1">City / Clinic Location</label>
                 <input
                   type="text"
-                  value={`${doctor.city}, ${doctor.country === 'DE' ? `${t.germany} 🇩🇪` : `${t.jordan} 🇯🇴`}`}
-                  readOnly
-                  className="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-slate-700 font-semibold"
+                  value={doctor.city}
+                  onChange={(e) => setDoctor({ ...doctor, city: e.target.value })}
+                  placeholder={doctor.country === 'DE' ? "e.g. Berlin, Munich" : "e.g. Amman, Aqaba"}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -490,10 +532,10 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={doctor.feeEur}
+                      value={doctor.feeEur || ''}
                       onChange={(e) => setDoctor({ ...doctor, feeEur: Number(e.target.value) })}
+                      placeholder="e.g. 150"
                       className="w-full bg-white border border-teal-200 rounded-xl p-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                      required
                     />
                   </div>
 
@@ -503,10 +545,10 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={doctor.feeJod}
+                      value={doctor.feeJod || ''}
                       onChange={(e) => setDoctor({ ...doctor, feeJod: Number(e.target.value) })}
+                      placeholder="e.g. 110"
                       className="w-full bg-white border border-teal-200 rounded-xl p-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                      required
                     />
                   </div>
                 </div>
@@ -531,10 +573,10 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={doctor.feeFileReviewEur ?? Math.round(doctor.feeEur * 0.7)}
+                      value={doctor.feeFileReviewEur || ''}
                       onChange={(e) => setDoctor({ ...doctor, feeFileReviewEur: Number(e.target.value) })}
+                      placeholder="e.g. 100"
                       className="w-full bg-white border border-sky-200 rounded-xl p-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                      required
                     />
                   </div>
 
@@ -544,10 +586,10 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={doctor.feeFileReviewJod ?? Math.round(doctor.feeJod * 0.7)}
+                      value={doctor.feeFileReviewJod || ''}
                       onChange={(e) => setDoctor({ ...doctor, feeFileReviewJod: Number(e.target.value) })}
+                      placeholder="e.g. 75"
                       className="w-full bg-white border border-sky-200 rounded-xl p-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                      required
                     />
                   </div>
                 </div>
@@ -561,6 +603,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
               <textarea
                 value={doctor.bio}
                 onChange={(e) => setDoctor({ ...doctor, bio: e.target.value })}
+                placeholder="Write your professional medical biography, clinical qualifications, hospital background, and expertise..."
                 rows={4}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none leading-relaxed"
               />
@@ -574,6 +617,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                 type="text"
                 value={doctor.nextAvailable}
                 onChange={(e) => setDoctor({ ...doctor, nextAvailable: e.target.value })}
+                placeholder="e.g. Tomorrow at 15:00 (Synchronous Tele-consultation)"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
               />
             </div>
@@ -607,20 +651,26 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {doctor.subSpecialties.map((sub, idx) => (
-                <div key={idx} className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-slate-800 font-bold">
-                  <span>{sub}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSubSpecialty(idx)}
-                    className="text-slate-400 hover:text-rose-600 p-0.5"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {doctor.subSpecialties.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-slate-500 text-xs font-medium">
+                No sub-specialties or focus tags added yet. Click <span className="font-bold text-teal-700">+ Add Sub-Specialty</span> to enter your areas of clinical focus.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {doctor.subSpecialties.map((sub, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-slate-800 font-bold">
+                    <span>{sub}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubSpecialty(idx)}
+                      className="text-slate-400 hover:text-rose-600 p-0.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>
@@ -650,55 +700,61 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
             </p>
 
             {/* List of Doctor's Certificates */}
-            <div className="space-y-3">
-              {certDocsList.map((cert, index) => (
-                <div key={cert.id} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2">
-                      <FileText className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-slate-900 block leading-tight font-bold">{cert.title}</strong>
-                        <span className="text-[11px] text-slate-500 block">{cert.issuingBody} ({cert.year})</span>
+            {certDocsList.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-slate-500 text-xs font-medium">
+                No board licenses or certificates added yet. Click <span className="font-bold text-emerald-700">+ Upload Certificate</span> to upload your diploma or medical license.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {certDocsList.map((cert, index) => (
+                  <div key={cert.id} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <FileText className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-slate-900 block leading-tight font-bold">{cert.title}</strong>
+                          <span className="text-[11px] text-slate-500 block">{cert.issuingBody} ({cert.year})</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewingCert(cert)}
+                          className="text-slate-500 hover:text-teal-600 p-1 bg-white rounded border border-slate-200"
+                          title="View / Preview Certificate Document"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCertModal(index)}
+                          className="text-slate-500 hover:text-sky-600 p-1 bg-white rounded border border-slate-200"
+                          title="Edit Certificate"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCertificate(index)}
+                          className="text-slate-400 hover:text-rose-600 p-1 bg-white rounded border border-slate-200"
+                          title="Delete Certificate"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewingCert(cert)}
-                        className="text-slate-500 hover:text-teal-600 p-1 bg-white rounded border border-slate-200"
-                        title="View / Preview Certificate Document"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenCertModal(index)}
-                        className="text-slate-500 hover:text-sky-600 p-1 bg-white rounded border border-slate-200"
-                        title="Edit Certificate"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCertificate(index)}
-                        className="text-slate-400 hover:text-rose-600 p-1 bg-white rounded border border-slate-200"
-                        title="Delete Certificate"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    {cert.fileName && (
+                      <div className="flex items-center gap-1.5 text-[10px] bg-emerald-100/80 text-emerald-900 px-2 py-1 rounded-md border border-emerald-200 font-mono">
+                        <ShieldCheck className="w-3 h-3 text-emerald-700 shrink-0" />
+                        <span className="truncate">{cert.fileName}</span>
+                      </div>
+                    )}
                   </div>
-
-                  {cert.fileName && (
-                    <div className="flex items-center gap-1.5 text-[10px] bg-emerald-100/80 text-emerald-900 px-2 py-1 rounded-md border border-emerald-200 font-mono">
-                      <ShieldCheck className="w-3 h-3 text-emerald-700 shrink-0" />
-                      <span className="truncate">{cert.fileName}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Languages Spoken Card */}
@@ -764,23 +820,29 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
               </button>
             </div>
 
-            <ul className="space-y-2">
-              {doctor.education.map((edu, index) => (
-                <li key={index} className="flex items-start justify-between gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-slate-800 text-[11px]">
-                  <div className="flex items-start gap-2">
-                    <Award className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
-                    <span>{edu}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteEducation(index)}
-                    className="text-slate-400 hover:text-rose-600 p-0.5"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {doctor.education.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-slate-500 text-xs font-medium">
+                No education degrees or fellowships added yet. Click <span className="font-bold text-sky-700">+ Add Education</span> to enter your qualifications.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {doctor.education.map((edu, index) => (
+                  <li key={index} className="flex items-start justify-between gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-slate-800 text-[11px]">
+                    <div className="flex items-start gap-2">
+                      <Award className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                      <span>{edu}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEducation(index)}
+                      className="text-slate-400 hover:text-rose-600 p-0.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
         </div>

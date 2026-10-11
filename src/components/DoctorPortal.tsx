@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Doctor, Appointment, MedicalRecord, LanguageCode, CurrencyCode } from '../types';
+import { Doctor, Appointment, MedicalRecord, LanguageCode, CurrencyCode, Specialty, ConsultationType } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
 import { MOCK_DOCTORS, MOCK_APPOINTMENTS, MOCK_RECORDS } from '../data/mockData';
 import { 
@@ -41,21 +41,56 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
   const defaultDoc = useMemo(() => {
     if (currentUser && currentUser.role === 'doctor') {
       const exactMatch = doctors.find(d => 
-        d.name.toLowerCase().includes(currentUser.fullName.toLowerCase()) || 
-        currentUser.fullName.toLowerCase().includes(d.name.toLowerCase()) ||
-        d.id === currentUser.id
+        d.id === currentUser.id ||
+        d.name.toLowerCase().trim() === currentUser.fullName.toLowerCase().trim()
       );
       if (exactMatch) return exactMatch;
 
-      if (currentUser.fullName?.toLowerCase().includes('layla') || currentUser.fullName?.toLowerCase().includes('khatib')) {
-        return doctors.find(d => d.name.includes('Layla')) || doctors[1] || MOCK_DOCTORS[1];
+      // Handle preset demo accounts
+      if (currentUser.id === 'doc-de-2' || currentUser.fullName?.toLowerCase().includes('sabine')) {
+        return doctors.find(d => d.id === 'doc-de-2') || MOCK_DOCTORS[0];
       }
-      if (currentUser.country === 'JO') {
-        return doctors.find(d => d.country === 'JO') || doctors[1] || MOCK_DOCTORS[1];
+      if (currentUser.id === 'usr-doc-jo-1' || currentUser.fullName?.toLowerCase().includes('layla')) {
+        return doctors.find(d => d.id === 'usr-doc-jo-1') || MOCK_DOCTORS[1];
       }
-      return doctors.find(d => d.name.includes('Sabine') || d.country === 'DE') || doctors[0] || MOCK_DOCTORS[0];
+
+      // Return newly registered doctor profile
+      return {
+        id: currentUser.id,
+        name: currentUser.fullName || 'Dr. Physician Consultant',
+        title: '',
+        titleDe: '',
+        titleAr: '',
+        country: (currentUser.country === 'DE' ? 'DE' : 'JO') as 'DE' | 'JO',
+        city: '',
+        hospital: '',
+        hospitalAr: '',
+        hospitalDe: '',
+        specialty: 'Cardiology' as Specialty,
+        subSpecialties: [],
+        languages: [],
+        experienceYears: 0,
+        rating: 5.0,
+        reviewCount: 0,
+        bio: '',
+        bioAr: '',
+        bioDe: '',
+        education: [],
+        certifications: [],
+        certificateDocs: [],
+        feeJod: 0,
+        feeEur: 0,
+        feeUsd: 0,
+        feeFileReviewEur: 0,
+        feeFileReviewJod: 0,
+        avatarUrl: '',
+        nextAvailable: '',
+        availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
+        timeZone: (currentUser.country === 'DE' ? 'Europe/Berlin' : 'Asia/Amman') as 'Europe/Berlin' | 'Asia/Amman',
+        timeZoneOffsetLabel: currentUser.country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
+      };
     }
-    return doctors[2] || doctors[0] || MOCK_DOCTORS[1]; // Dr. Layla Al-Khatib
+    return doctors[0] || MOCK_DOCTORS[0];
   }, [currentUser, doctors]);
 
   const [activeDoctor, setActiveDoctor] = useState<Doctor>(defaultDoc);

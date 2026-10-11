@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { UserAccount, LanguageCode, PatientProfile } from '../types';
+import { UserAccount, LanguageCode, Doctor, Specialty, ConsultationType } from '../types';
 import { TRANSLATIONS } from '../translations/translations';
-import { User, Mail, Lock, Phone, Globe, ShieldCheck, Check, Sparkles, X, Stethoscope, ArrowRight, LogIn, UserPlus } from 'lucide-react';
+import { 
+  User, Mail, Lock, Phone, Globe, ShieldCheck, Check, Sparkles, 
+  X, Stethoscope, LogIn, UserPlus
+} from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentLang: LanguageCode;
-  onLoginSuccess: (user: UserAccount) => void;
+  onLoginSuccess: (user: UserAccount, newDoctor?: Doctor) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -22,65 +25,118 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const isRtl = currentLang === 'ar';
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
-  // Form Fields
-  const [email, setEmail] = useState('omar.masmoudi@example.com');
-  const [password, setPassword] = useState('password123');
-  const [fullName, setFullName] = useState('Omar Al-Masmoudi');
-  const [phone, setPhone] = useState('+962 7 9123 4567');
+  // Standard Account Sign Up & Sign In Fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [country, setCountry] = useState<'JO' | 'DE' | 'Other'>('JO');
   const [preferredLang, setPreferredLang] = useState<LanguageCode>(currentLang);
   const [role, setRole] = useState<'patient' | 'doctor'>('patient');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMsg(null);
 
     setTimeout(() => {
       setIsLoading(false);
 
+      if (role === 'doctor' && authMode === 'register') {
+        // Create clean empty Doctor profile object for the newly registered physician
+        // All fields start completely empty so the physician can enter their real data.
+        const createdDoctor: Doctor = {
+          id: `usr-doc-${Date.now()}`,
+          name: fullName.trim() || 'Dr. Physician Consultant',
+          title: '',
+          titleDe: '',
+          titleAr: '',
+          country: country === 'DE' ? 'DE' : 'JO',
+          city: '',
+          hospital: '',
+          hospitalAr: '',
+          hospitalDe: '',
+          specialty: 'Cardiology' as Specialty,
+          subSpecialties: [],
+          languages: [],
+          experienceYears: 0,
+          rating: 5.0,
+          reviewCount: 0,
+          bio: '',
+          bioAr: '',
+          bioDe: '',
+          education: [],
+          certifications: [],
+          certificateDocs: [],
+          feeJod: 0,
+          feeEur: 0,
+          feeUsd: 0,
+          feeFileReviewEur: 0,
+          feeFileReviewJod: 0,
+          avatarUrl: '',
+          nextAvailable: '',
+          availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
+          timeZone: (country === 'DE' ? 'Europe/Berlin' : 'Asia/Amman') as 'Europe/Berlin' | 'Asia/Amman',
+          timeZoneOffsetLabel: country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
+        };
+
+        const authenticatedUser: UserAccount = {
+          id: createdDoctor.id,
+          fullName: createdDoctor.name,
+          email,
+          phone,
+          role: 'doctor',
+          country: country === 'DE' ? 'DE' : 'JO',
+          preferredLanguage: preferredLang,
+          isAuthenticated: true
+        };
+
+        onLoginSuccess(authenticatedUser, createdDoctor);
+        onClose();
+        return;
+      }
+
+      // Standard Login / Patient Registration Flow
       const authenticatedUser: UserAccount = {
         id: `user-${Date.now()}`,
-        fullName: authMode === 'login' ? (role === 'doctor' ? 'Prof. Dr. med. Sabine Weber' : fullName) : fullName,
+        fullName: authMode === 'login' ? (role === 'doctor' ? 'Prof. Dr. med. Sabine Weber' : (fullName || 'Patient User')) : fullName,
         email,
         phone,
         role,
         country,
         preferredLanguage: preferredLang,
         isAuthenticated: true,
-        patientProfile: {
-          fullName: authMode === 'login' ? fullName : fullName,
+        patientProfile: role === 'patient' ? {
+          fullName: fullName,
           email,
           phone,
-          dob: '1988-05-14',
-          gender: 'Male',
-          passportId: 'P-9812401',
+          dob: '',
+          gender: '',
+          passportId: '',
           countryOfResidence: country,
-          chronicConditions: ['Tension Headaches', 'Mild Hypertension'],
-          allergies: ['Penicillin'],
-          pastSurgeries: 'Appendectomy (2018)',
-          currentMedications: ['Bisoprolol Fumarate 2.5mg'],
-          bloodType: 'O+',
-          familyHistory: 'Maternal history of cardiac arrhythmia.',
-          insuranceProviderName: 'Techniker Krankenkasse (TK) / Allianz',
-          insurancePolicyNumber: 'TK-981240129-DE',
+          chronicConditions: [],
+          allergies: [],
+          pastSurgeries: '',
+          currentMedications: [],
+          bloodType: '',
+          familyHistory: '',
+          insuranceProviderName: '',
+          insurancePolicyNumber: '',
           coverageRegion: 'International / Cross-Border',
-          insuranceExpiry: '2027-12-31',
-          insuranceCardUploaded: true,
+          insuranceExpiry: '',
+          insuranceCardUploaded: false,
           preferredLanguage: preferredLang,
-          preferredContactMethod: 'WhatsApp',
-          emergencyContactName: 'Fatima Al-Masmoudi',
-          emergencyContactRelation: 'Spouse',
-          emergencyContactPhone: '+962 7 9876 5432'
-        }
+          preferredContactMethod: 'Email',
+          emergencyContactName: '',
+          emergencyContactRelation: '',
+          emergencyContactPhone: ''
+        } : undefined
       };
 
       onLoginSuccess(authenticatedUser);
       onClose();
-    }, 800);
+    }, 500);
   };
 
   const handleDemoSignIn = (presetUser: 'patient' | 'de_doc' | 'jo_doc') => {
@@ -102,7 +158,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         };
       } else if (presetUser === 'de_doc') {
         demoUser = {
-          id: 'usr-doc-de-1',
+          id: 'doc-de-2',
           fullName: 'Prof. Dr. med. Sabine Weber',
           email: 'sabine.weber@charite.de',
           phone: '+49 30 45050',
@@ -126,7 +182,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       onLoginSuccess(demoUser);
       onClose();
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -136,7 +192,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -154,7 +210,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <p className="text-xs text-slate-300">
             {authMode === 'login'
               ? t.subTitle
-              : 'Register for direct cross-border medical consultations between Jordan & Germany.'}
+              : 'Sign up to access direct cross-border consultations & professional doctor portal.'}
           </p>
         </div>
 
@@ -187,7 +243,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Demo Quick Sign-In Presets */}
         {authMode === 'login' && (
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2 text-xs">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
             <span className="text-[11px] font-bold text-teal-400 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" /> {t.demoAccountsNotice}
             </span>
@@ -265,17 +321,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
+          {/* Registration Form Fields - Standard Name, Email, Password, Phone, Country */}
           {authMode === 'register' && (
             <div>
-              <label className="font-semibold text-slate-200 block mb-1">{t.patientName}</label>
+              <label className="font-semibold text-slate-200 block mb-1">
+                {role === 'doctor' ? 'Physician Full Name *' : t.patientName}
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder={role === 'doctor' ? "e.g. Prof. Dr. Sabine Weber" : "e.g. Omar Al-Masmoudi"}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 pl-9 text-xs text-white focus:outline-none focus:border-teal-500"
+                  placeholder={role === 'doctor' ? "e.g. Dr. med. Sami Al-Mansoor" : "e.g. Omar Al-Masmoudi"}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 pl-9 text-xs text-white focus:outline-none focus:border-teal-500 font-bold"
                 />
                 <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               </div>
@@ -294,6 +353,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 pl-9 text-xs text-white focus:outline-none focus:border-teal-500"
               />
               <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+            </div>
+          </div>
+
+          <div>
+            <label className="font-semibold text-slate-200 block mb-1">Password *</label>
+            <div className="relative">
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 pl-9 text-xs text-white focus:outline-none focus:border-teal-500"
+              />
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
             </div>
           </div>
 
@@ -344,42 +418,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          <div>
-            <label className="font-semibold text-slate-200 block mb-1">{t.passwordLabel}</label>
-            <div className="relative">
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 pl-9 text-xs text-white focus:outline-none focus:border-teal-500"
-              />
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-            </div>
-          </div>
-
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 mt-4 hover:scale-[1.02] disabled:opacity-50"
           >
             {isLoading ? (
-              <span>Authenticating...</span>
+              <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <span>{authMode === 'login' ? t.signInBtn : t.registerBtn}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4 text-slate-950" />
+                <span>{authMode === 'login' ? t.signInBtn : t.createAccountBtn}</span>
               </>
             )}
           </button>
+
+          {/* Footer Note */}
+          <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1 pt-2">
+            <Globe className="w-3 h-3 text-teal-400" />
+            <span>Jordanian & German Medical Council Compliant Gateway</span>
+          </p>
+
         </form>
-
-        <div className="text-center pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>{t.trustNotice}</span>
-        </div>
-
       </div>
     </div>
   );

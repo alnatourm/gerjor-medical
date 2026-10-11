@@ -662,13 +662,16 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentLang={currentLang}
-        onLoginSuccess={(user) => {
+        onLoginSuccess={(user, newDoctor) => {
+          if (newDoctor) {
+            setDoctors(prev => [newDoctor, ...prev]);
+          }
           setCurrentUser(user);
           if (user.patientProfile) {
             setPatientProfile(user.patientProfile);
           }
           if (user.role === 'doctor') {
-            setCurrentTab('doctor-portal');
+            setCurrentTab('doctor-profile');
           } else {
             setCurrentTab('dashboard');
           }

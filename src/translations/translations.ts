@@ -455,7 +455,18 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     emailLabel: 'Email Address',
     passwordLabel: 'Password',
     signInBtn: 'Sign In',
-    registerBtn: 'Create Account'
+    registerBtn: 'Create Account',
+    physicianMajorLabel: 'Primary Medical Major / Specialty *',
+    subSpecialtiesLabel: 'Sub-Specialties & Clinic Focus *',
+    physicianTitleLabel: 'Clinical Title & Designation *',
+    hospitalLabel: 'Affiliated Hospital / Medical Center *',
+    cityLabel: 'City of Practice *',
+    licenseNumberLabel: 'Medical Council License / Registration # *',
+    languagesSpokenLabel: 'Spoken Languages *',
+    videoRateLabel: 'Live Video Rate (EUR €) *',
+    experienceYearsLabel: 'Years of Experience *',
+    doctorRegisterStepTitle: 'Physician Credentials & Medical Major Registration',
+    doctorRegisterSubtitle: 'Enter your clinical major, hospital affiliation, and medical license to create your verified consultant profile.'
   },
 
   ar: {
@@ -912,7 +923,18 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     emailLabel: 'البريد الإلكتروني',
     passwordLabel: 'كلمة المرور',
     signInBtn: 'تسجيل الدخول',
-    registerBtn: 'إنشاء حساب جديد'
+    registerBtn: 'إنشاء حساب جديد',
+    physicianMajorLabel: 'التخصص الطبي الرئيسي *',
+    subSpecialtiesLabel: 'التخصصات الدقيقة والتركيز السريري *',
+    physicianTitleLabel: 'اللقب والدرجة الطبية *',
+    hospitalLabel: 'المستشفى أو المركز الطبي المعتمد *',
+    cityLabel: 'مدينة الممارسة الطبية *',
+    licenseNumberLabel: 'رقم ترخيص المزاولة / المجلس الطبي *',
+    languagesSpokenLabel: 'اللغات المتقنة *',
+    videoRateLabel: 'رسوم الاستشارة المباشرة (يورو €) *',
+    experienceYearsLabel: 'سنوات الخبرة السريرية *',
+    doctorRegisterStepTitle: 'تسجيل أوراق الاعتماد والتخصص الطبي للطبيب',
+    doctorRegisterSubtitle: 'أدخل تخصصك الطبي والمستشفى ورقم الترخيص لإنشاء ملفك الاستشاري المعتمد.'
   },
 
   de: {
@@ -1344,6 +1366,17 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     startAnotherRequestBtn: 'Weitere Anfrage starten',
     recordVoiceBtn: 'Sprachnotiz aufnehmen',
     stopAndTranscribeBtn: 'Stoppen & Transkribieren',
-    speakPromptText: 'Sprechen Sie Ihre Symptome auf Deutsch, Arabisch oder Englisch'
+    speakPromptText: 'Sprechen Sie Ihre Symptome auf Deutsch, Arabisch oder Englisch',
+    physicianMajorLabel: 'Hauptfachgebiet / Spezialisierung *',
+    subSpecialtiesLabel: 'Subspezialisierungen & Klinischer Schwerpunkt *',
+    physicianTitleLabel: 'Facharztbezeichnung & Titel *',
+    hospitalLabel: 'Angeschlossenes Krankenhaus / Klinikum *',
+    cityLabel: 'Praxisstadt *',
+    licenseNumberLabel: 'Approbation / Ärztekammer-Nummer *',
+    languagesSpokenLabel: 'Gesprochene Sprachen *',
+    videoRateLabel: 'Honorar für Videosprechstunde (EUR €) *',
+    experienceYearsLabel: 'Jahre klinischer Erfahrung *',
+    doctorRegisterStepTitle: 'Registrierung von Facharztqualifikation & Schwerpunkten',
+    doctorRegisterSubtitle: 'Geben Sie Ihr Fachgebiet, Klinikanbindung und Ärztekammer-Nummer ein, um Ihr verifiziertes Facharztprofil zu erstellen.'
   }
 };
