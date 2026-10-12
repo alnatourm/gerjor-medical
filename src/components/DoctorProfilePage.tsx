@@ -799,17 +799,17 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
         {/* Right Column (4 cols): Certificates Upload/Manage, Spoken Languages & Education */}
         <div className="lg:col-span-4 space-y-6">
 
-          {/* Certificates & Medical Board Diplomas Management Card */}
+          {/* Certificates & Diplomas Management Card */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 text-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-bold text-slate-900 text-sm">{t.verifiedBoardCertifications}</h3>
+                <Award className="w-5 h-5 text-teal-600" />
+                <h3 className="font-bold text-slate-900 text-sm">Medical Certificates & Diplomas</h3>
               </div>
               <button
                 type="button"
                 onClick={() => handleOpenCertModal()}
-                className="px-3 py-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold rounded-lg flex items-center gap-1 shrink-0"
+                className="px-3 py-1 bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200 text-[11px] font-bold rounded-lg flex items-center gap-1 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Upload Certificate</span>
@@ -817,7 +817,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
             </div>
 
             <p className="text-[11px] text-slate-500">
-              Upload medical board licenses, Facharzt diplomas, or fellowship certificates for patient verification.
+              Upload medical certificates, Facharzt diplomas, or fellowship qualifications to display on your profile.
             </p>
 
             {/* List of Doctor's Certificates */}
