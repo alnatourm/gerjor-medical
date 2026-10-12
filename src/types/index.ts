@@ -12,7 +12,9 @@ export type Specialty =
   | 'General Surgery'
   | 'Gastroenterology'
   | 'Urology'
-  | 'Ophthalmology';
+  | 'Ophthalmology'
+  | 'Other'
+  | (string & {});
 
 export type ConsultationType = 'video' | 'second_opinion' | 'record_review';
 
@@ -60,6 +62,9 @@ export interface Doctor {
   availableTypes: ConsultationType[];
   timeZone: 'Asia/Amman' | 'Europe/Berlin';
   timeZoneOffsetLabel: string;
+  isValidated?: boolean;
+  validationStatus?: 'pending' | 'verified' | 'rejected';
+  validationNotes?: string;
 }
 
 export interface TimeSlot {
@@ -73,6 +78,8 @@ export interface TimeSlot {
 
 export interface MedicalRecord {
   id: string;
+  patientId?: string;
+  doctorId?: string;
   title: string;
   type: 'Lab Result' | 'Doctor Report' | 'Photo / Scan' | 'MRI/CT Scan' | 'Prescription' | 'Doctor Summary' | 'Referral Letter';
   date: string;
@@ -85,10 +92,12 @@ export interface MedicalRecord {
   language?: LanguageCode;
   fileUrl?: string;
   fileName?: string;
+  fileDataUrl?: string;
 }
 
 export interface Appointment {
   id: string;
+  patientId?: string;
   doctorId: string;
   doctorName: string;
   doctorSpecialty: Specialty;
@@ -111,6 +120,15 @@ export interface Appointment {
     notes: string;
     doctorSignature: string;
   };
+  doctorOpinion?: string;
+  doctorOpinionDate?: string;
+  caseMessages?: Array<{
+    id: string;
+    sender: 'patient' | 'doctor';
+    senderName: string;
+    text: string;
+    timestamp: string;
+  }>;
   totalFee: number;
   currency: CurrencyCode;
 }
@@ -158,6 +176,7 @@ export interface UserAccount {
   isAuthenticated: boolean;
   avatarUrl?: string;
   patientProfile?: PatientProfile;
+  isDoctorValidated?: boolean;
 }
 
 export interface ChatMessage {

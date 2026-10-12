@@ -3,11 +3,13 @@ import { CountryCode, LanguageCode, CurrencyCode, Doctor, Specialty, Appointment
 import { TRANSLATIONS } from '../translations/translations';
 import { MOCK_DOCTORS } from '../data/mockData';
 import { VoiceNoteRecorder } from './VoiceNoteRecorder';
-import { Globe, FileUp, Calendar, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Stethoscope, Clock, Award, Building, User, ChevronRight, Upload, Loader2, ArrowLeft, Camera, FlaskConical, FileText, Image as ImageIcon, X, Check } from 'lucide-react';
+import { Globe, FileUp, Calendar, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Stethoscope, Clock, Award, Building, User, ChevronRight, Upload, Loader2, ArrowLeft, Camera, FlaskConical, FileText, Image as ImageIcon, X, Check, Plus } from 'lucide-react';
 
 interface CountrySelectionFlowProps {
   currentLang: LanguageCode;
   currentCurrency: CurrencyCode;
+  doctors?: Doctor[];
+  currentUser?: any;
   onSelectCountryAndPath: (country: 'DE' | 'JO', path: 'upload_case' | 'book_appointment', doctor?: Doctor) => void;
   onCompleteBooking: (app: Partial<Appointment>) => void;
 }
@@ -15,6 +17,8 @@ interface CountrySelectionFlowProps {
 export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
   currentLang,
   currentCurrency,
+  doctors = [],
+  currentUser,
   onSelectCountryAndPath,
   onCompleteBooking
 }) => {
@@ -34,21 +38,43 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
   // Case File Upload Form State
   const [caseTitle, setCaseTitle] = useState('');
   const [caseSymptoms, setCaseSymptoms] = useState('');
+  const [patientQuestionsList, setPatientQuestionsList] = useState<string[]>(['']);
   const [fileName, setFileName] = useState('');
   const [isAnalyzingFile, setIsAnalyzingFile] = useState(false);
   const [aiTriageResult, setAiTriageResult] = useState<any>(null);
 
+  const handleAddQuestionField = () => {
+    setPatientQuestionsList(prev => [...prev, '']);
+  };
+
+  const handleRemoveQuestionField = (index: number) => {
+    setPatientQuestionsList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleQuestionFieldChange = (index: number, val: string) => {
+    setPatientQuestionsList(prev => prev.map((q, i) => i === index ? val : q));
+  };
+
   // Appointment Slot State
   const [selectedDate, setSelectedDate] = useState('2026-10-10');
   const [selectedSlot, setSelectedSlot] = useState({ amman: '16:00', berlin: '15:00' });
-  const [patientName, setPatientName] = useState('Omar Al-Masmoudi');
-  const [patientEmail, setPatientEmail] = useState('omar.masmoudi@example.com');
-  const [patientPhone, setPatientPhone] = useState('+962 7 9123 4567');
+  const [patientName, setPatientName] = useState(currentUser?.fullName || '');
+  const [patientEmail, setPatientEmail] = useState(currentUser?.email || '');
+  const [patientPhone, setPatientPhone] = useState(currentUser?.phone || '');
+
+  // Keep patient details in sync with logged in user
+  React.useEffect(() => {
+    if (currentUser) {
+      if (currentUser.fullName) setPatientName(currentUser.fullName);
+      if (currentUser.email) setPatientEmail(currentUser.email);
+      if (currentUser.phone) setPatientPhone(currentUser.phone);
+    }
+  }, [currentUser]);
 
   const [isSuccessSubmitted, setIsSuccessSubmitted] = useState(false);
 
-  // Filtered doctors for chosen country
-  const countryDoctors = MOCK_DOCTORS.filter(d => d.country === selectedCountry);
+  // Filtered doctors for chosen country from dynamic database
+  const countryDoctors = doctors.filter(d => d.country === selectedCountry);
 
   // Document Attachment Categories: 'lab_report' | 'doctor_report' | 'photo' | 'mri'
   const [uploadCategory, setUploadCategory] = useState<'lab_report' | 'doctor_report' | 'photo' | 'mri'>('lab_report');
@@ -114,22 +140,38 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
 
   const handleFinalSubmitCase = () => {
     const doc = selectedDoctor || countryDoctors[0];
+
+    const validQuestions = patientQuestionsList.map(q => q.trim()).filter(Boolean);
+
+    const initialCaseMessages = validQuestions.map((qText, idx) => ({
+      id: `msg-${Date.now()}-${idx}`,
+      sender: 'patient' as const,
+      senderName: patientName || currentUser?.fullName || 'Patient',
+      text: qText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }));
+
+    const formattedQuestionsText = validQuestions.length > 0 
+      ? `\n\n[Patient Specific Questions]:\n` + validQuestions.map((q, i) => `Q${i + 1}: ${q}`).join('\n')
+      : '';
+
     onCompleteBooking({
-      doctorId: doc.id,
-      doctorName: doc.name,
-      doctorSpecialty: doc.specialty,
-      doctorCountry: doc.country,
-      doctorHospital: doc.hospital,
-      patientName,
-      patientEmail,
-      patientPhone,
+      doctorId: doc ? doc.id : 'doc-general-board',
+      doctorName: doc ? doc.name : (selectedCountry === 'DE' ? 'German Specialist Medical Board' : 'Jordanian Specialist Medical Board'),
+      doctorSpecialty: doc ? doc.specialty : (selectedSpecialty !== 'ALL' ? selectedSpecialty : 'Neurology'),
+      doctorCountry: doc ? doc.country : (selectedCountry || 'DE'),
+      doctorHospital: doc ? doc.hospital : (selectedCountry === 'DE' ? 'Charité University Network Berlin' : 'Amman Medical Center'),
+      patientName: patientName || currentUser?.fullName || 'Patient User',
+      patientEmail: patientEmail || currentUser?.email || 'patient@example.com',
+      patientPhone: patientPhone || currentUser?.phone || '',
       consultationType: selectedPath === 'upload_case' ? 'second_opinion' : 'video',
       date: selectedDate,
       timeAmman: selectedSlot.amman,
       timeBerlin: selectedSlot.berlin,
-      symptoms: caseSymptoms || caseTitle,
+      symptoms: `${caseSymptoms || caseTitle}${formattedQuestionsText}`,
+      caseMessages: initialCaseMessages,
       aiSummary: aiTriageResult?.clinicalSummary || 'Medical case file uploaded for specialist review.',
-      totalFee: currentCurrency === 'EUR' ? doc.feeEur : (currentCurrency === 'JOD' ? doc.feeJod : doc.feeUsd),
+      totalFee: doc ? (currentCurrency === 'EUR' ? doc.feeEur : (currentCurrency === 'JOD' ? doc.feeJod : doc.feeUsd)) : 150,
       currency: currentCurrency
     });
     setIsSuccessSubmitted(true);
@@ -455,6 +497,54 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 />
               </div>
 
+              {/* Dynamic List of Specific Questions for the Specialist */}
+              <div className="space-y-2.5 bg-slate-900/60 p-4 rounded-2xl border border-teal-800/80">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-teal-300 text-xs block">
+                    ❓ {currentLang === 'ar' ? 'أسئلتك المحددة للطبيب حول الحالة والتقارير المرفقة:' : 'Specific Questions for the Specialist Physician:'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddQuestionField}
+                    className="px-3 py-1 bg-teal-600/30 hover:bg-teal-600/50 text-teal-300 border border-teal-500/40 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-teal-400" />
+                    <span>{currentLang === 'ar' ? 'إضافة سؤال آخر' : 'Add Question'}</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {patientQuestionsList.map((qText, index) => (
+                    <div key={index} className="flex items-center gap-2 animate-fade-in">
+                      <span className="text-teal-400 font-bold text-xs shrink-0 w-6 text-center">
+                        Q{index + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={qText}
+                        onChange={(e) => handleQuestionFieldChange(index, e.target.value)}
+                        placeholder={
+                          index === 0
+                            ? (currentLang === 'ar' ? 'مثال: ماذا تبين نتيجة صورة الرنين المغناطيسي المرفقة؟' : 'e.g., What does this attached MRI scan indicate?')
+                            : (currentLang === 'ar' ? 'مثال: هل هناك حاجة لتنفيذ إجراء جراحي؟' : 'e.g., Do I need surgical intervention or alternative therapy?')
+                        }
+                        className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-teal-500 shadow-sm"
+                      />
+                      {patientQuestionsList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQuestionField(index)}
+                          className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors border border-slate-700 shrink-0"
+                          title="Remove Question"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* 3 Document Category Selector & Upload Options */}
               <div className="space-y-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-700/80">
                 <label className="font-bold text-slate-200 block text-xs">
@@ -666,25 +756,52 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                 <p className="text-slate-300 leading-relaxed">{aiTriageResult.clinicalSummary}</p>
 
                 <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <span className="font-bold text-slate-200 block">{t.recommendedSpecialistsForCase}</span>
-                  
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {countryDoctors.slice(0, 2).map(doc => (
-                      <div
-                        key={doc.id}
-                        onClick={() => setSelectedDoctor(doc)}
-                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                          selectedDoctor?.id === doc.id
-                            ? 'bg-teal-950 border-teal-500 ring-2 ring-teal-500/20'
-                            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        <span className="font-bold text-white block">{doc.name}</span>
-                        <span className="text-slate-400 text-[11px] block">{doc.specialty} · {doc.hospital}</span>
-                        <span className="text-teal-400 text-[10px] font-bold mt-1 block">{t.nextSlotLabel} {doc.nextAvailable}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-200 block">{t.recommendedSpecialistsForCase}</span>
+                    <span className="text-[11px] text-teal-400 font-semibold">
+                      {countryDoctors.length} {countryDoctors.length === 1 ? 'Specialist Available' : 'Specialists Available'} in {selectedCountry === 'DE' ? 'Germany 🇩🇪' : 'Jordan 🇯🇴'}
+                    </span>
                   </div>
+                  
+                  {countryDoctors.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {countryDoctors.map((doc, idx) => {
+                        const isSelected = selectedDoctor?.id === doc.id || (!selectedDoctor && idx === 0);
+                        return (
+                          <div
+                            key={doc.id}
+                            onClick={() => setSelectedDoctor(doc)}
+                            className={`p-3.5 rounded-xl border text-xs cursor-pointer transition-all relative ${
+                              isSelected
+                                ? 'bg-teal-950/90 border-teal-500 ring-2 ring-teal-500/30'
+                                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                            }`}
+                          >
+                            {idx === 0 && (
+                              <span className="absolute top-2 right-2 bg-teal-500 text-slate-950 font-extrabold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
+                                ✨ Top AI Match
+                              </span>
+                            )}
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-white text-sm block">{doc.name}</span>
+                            </div>
+                            <span className="text-slate-300 text-[11px] font-medium block">{doc.title || doc.specialty} · {doc.hospital}</span>
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
+                              <span className="text-teal-400 text-[10px] font-bold">{t.nextSlotLabel} {doc.nextAvailable || 'Today'}</span>
+                              <span className="text-white font-extrabold text-xs">
+                                {currentCurrency === 'EUR' ? `€${doc.feeEur}` : (currentCurrency === 'JOD' ? `${doc.feeJod} JOD` : `$${doc.feeUsd}`)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 text-xs flex items-center gap-2">
+                      <span className="text-teal-400 font-bold">ℹ️</span>
+                      <span>No individual physicians registered in {selectedCountry === 'DE' ? 'Germany 🇩🇪' : 'Jordan 🇯🇴'} yet. Your case will be assigned to the Medical Board Queue until a specialist accepts it.</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -692,7 +809,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{t.submitCaseToBtn} {selectedDoctor ? selectedDoctor.name : countryDoctors[0]?.name}</span>
+                  <span>{t.submitCaseToBtn} {selectedDoctor ? selectedDoctor.name : (countryDoctors[0]?.name || (selectedCountry === 'DE' ? 'German Medical Board' : 'Jordanian Medical Board'))}</span>
                 </button>
               </div>
             )}

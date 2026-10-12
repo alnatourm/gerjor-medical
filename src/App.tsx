@@ -23,49 +23,40 @@ export default function App() {
   const [currentCurrency, setCurrentCurrency] = useState<CurrencyCode>('EUR');
 
   // Authenticated User State
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>({
-    id: 'usr-patient-1',
-    fullName: 'Omar Al-Masmoudi',
-    email: 'omar.masmoudi@example.com',
-    phone: '+962 7 9123 4567',
-    role: 'patient',
-    country: 'JO',
-    preferredLanguage: 'en',
-    isAuthenticated: true
-  });
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   // Patient Profile State
   const [patientProfile, setPatientProfile] = useState<PatientProfile>({
-    fullName: 'Omar Al-Masmoudi',
-    email: 'omar.masmoudi@example.com',
-    phone: '+962 7 9123 4567',
-    dob: '1988-05-14',
-    gender: 'Male',
-    passportId: 'P-9812401',
+    fullName: '',
+    email: '',
+    phone: '',
+    dob: '',
+    gender: '',
+    passportId: '',
     countryOfResidence: 'JO',
     
     // Medical History
-    chronicConditions: ['Tension Headaches', 'Mild Hypertension'],
-    allergies: ['Penicillin', 'Iodine Contrast (Mild)'],
-    pastSurgeries: 'Appendectomy (2018)',
-    currentMedications: ['Bisoprolol Fumarate 2.5mg', 'Magnesium Citrate 150mg'],
-    bloodType: 'O+',
-    familyHistory: 'Maternal history of cardiac arrhythmia; paternal history of diabetes.',
+    chronicConditions: [],
+    allergies: [],
+    pastSurgeries: '',
+    currentMedications: [],
+    bloodType: '',
+    familyHistory: '',
 
     // Insurance Provider
-    insuranceProviderName: 'Techniker Krankenkasse (TK) / Allianz Global Health',
-    insurancePolicyNumber: 'TK-981240129-DE',
+    insuranceProviderName: '',
+    insurancePolicyNumber: '',
     coverageRegion: 'International / Cross-Border',
-    insuranceExpiry: '2027-12-31',
-    insuranceCardUploaded: true,
+    insuranceExpiry: '',
+    insuranceCardUploaded: false,
 
     // Preferred Language & Communication
     preferredLanguage: 'en',
     preferredContactMethod: 'WhatsApp',
-    emergencyContactName: 'Fatima Al-Masmoudi',
-    emergencyContactRelation: 'Spouse',
-    emergencyContactPhone: '+962 7 9876 5432'
+    emergencyContactName: '',
+    emergencyContactRelation: '',
+    emergencyContactPhone: ''
   });
 
   // Modals and Drawers
@@ -75,12 +66,64 @@ export default function App() {
   const [isUploadRecordOpen, setIsUploadRecordOpen] = useState<boolean>(false);
 
   // App State Stores
-  const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
-  const [records, setRecords] = useState<MedicalRecord[]>(MOCK_RECORDS);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+
+  // Keep patient profile in sync with logged in user
+  useEffect(() => {
+    if (currentUser) {
+      setPatientProfile(prev => ({
+        ...prev,
+        fullName: currentUser.fullName || prev.fullName,
+        email: currentUser.email || prev.email,
+        phone: currentUser.phone || prev.phone,
+        countryOfResidence: (currentUser.country as 'JO' | 'DE') || prev.countryOfResidence
+      }));
+    }
+  }, [currentUser]);
+
+  // Restore session & fetch persistent backend data on mount
+  useEffect(() => {
+    const token = localStorage.getItem('medlink_token');
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setCurrentUser(data.user);
+          }
+        })
+        .catch(err => console.error('Session restore error:', err));
+    }
+
+    // Fetch doctors, appointments, and records from persistent server db
+    fetch('/api/doctors')
+      .then(res => res.json())
+      .then(data => {
+        if (data.doctors) setDoctors(data.doctors);
+      })
+      .catch(console.error);
+
+    fetch('/api/appointments')
+      .then(res => res.json())
+      .then(data => {
+        if (data.appointments) setAppointments(data.appointments);
+      })
+      .catch(console.error);
+
+    fetch('/api/records')
+      .then(res => res.json())
+      .then(data => {
+        if (data.records) setRecords(data.records);
+      })
+      .catch(console.error);
+  }, []);
 
   // Selected Active Appointment for Virtual Clinic Call
-  const [activeClinicAppointment, setActiveClinicAppointment] = useState<Appointment | null>(MOCK_APPOINTMENTS[0]);
+  const [activeClinicAppointment, setActiveClinicAppointment] = useState<Appointment | null>(null);
 
   // Handle Search from Hero redirects to Gateway Flow
   const handleHeroSearch = (query: string, specialty?: Specialty, country?: CountryCode) => {
@@ -171,20 +214,71 @@ export default function App() {
     }
   };
 
-  const handleSaveUploadedRecord = (e: React.FormEvent) => {
+  const handleSaveUploadedRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRecTitle.trim()) return;
 
+    let serverFileUrl = '';
+    let finalFileName = uploadedFileName;
+    let finalFileSize = uploadedFileSize || '5.0 MB';
+
+    if (uploadedFileObj) {
+      try {
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const res = reader.result as string;
+            resolve(res);
+          };
+          reader.readAsDataURL(uploadedFileObj);
+        });
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64Data,
+            fileName: uploadedFileObj.name,
+            fileType: uploadedFileObj.type
+          })
+        });
+
+        const uploadData = await uploadRes.json();
+        if (uploadData.fileUrl) {
+          serverFileUrl = uploadData.fileUrl;
+          finalFileName = uploadData.fileName || uploadedFileObj.name;
+          finalFileSize = uploadData.fileSize || finalFileSize;
+        }
+      } catch (err) {
+        console.error('File upload error:', err);
+      }
+    }
+
     const newRecord: MedicalRecord = {
       id: `rec-${Date.now()}`,
+      patientId: currentUser?.id,
+      patientName: currentUser?.fullName || 'Patient User',
+      patientEmail: currentUser?.email || 'patient@example.com',
       title: newRecTitle,
       type: newRecType,
       date: new Date().toISOString().split('T')[0],
       uploadedBy: 'Patient Upload',
-      fileSize: uploadedFileSize || '14.2 MB',
-      notes: uploadedFileName ? `Attached File: ${uploadedFileName}\n${newRecNotes}` : newRecNotes,
+      fileSize: finalFileSize,
+      fileUrl: serverFileUrl || undefined,
+      fileName: finalFileName || undefined,
+      notes: finalFileName ? `Attached File: ${finalFileName}\n${newRecNotes}` : newRecNotes,
       aiSummary: 'Bilingual AI Intake Analysis: Attached report processed for Jordanian and German doctor review.'
     };
+
+    try {
+      await fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRecord)
+      });
+    } catch (err) {
+      console.error('Error saving record to server:', err);
+    }
 
     setRecords(prev => [newRecord, ...prev]);
     setIsUploadRecordOpen(false);
@@ -221,26 +315,17 @@ export default function App() {
       <main className="flex-1">
         
         {currentTab === 'home' && (
-          <>
-            {/* Step 1 & 2 Primary Direct Gateway Flow: Country Corridor -> Upload Case or Ask for Appointment -> Automated Doctor Assignment */}
-            <CountrySelectionFlow
-              currentLang={currentLang}
-              currentCurrency={currentCurrency}
-              onSelectCountryAndPath={(country, path, doc) => {
-                setSelectedCountry(country);
-                if (doc) setBookingDoctor(doc);
-              }}
-              onCompleteBooking={handleCompleteBooking}
-            />
-
-            <HeroSection
-              onSearchDoctors={handleHeroSearch}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
-              currentLang={currentLang}
-              currentCurrency={currentCurrency}
-            />
-          </>
+          <CountrySelectionFlow
+            currentLang={currentLang}
+            currentCurrency={currentCurrency}
+            doctors={doctors}
+            currentUser={currentUser}
+            onSelectCountryAndPath={(country, path, doc) => {
+              setSelectedCountry(country);
+              if (doc) setBookingDoctor(doc);
+            }}
+            onCompleteBooking={handleCompleteBooking}
+          />
         )}
 
         {currentTab === 'dashboard' && (

@@ -9,6 +9,36 @@ import {
   ChevronRight, AlertCircle, FileUp, Sparkles, Eye
 } from 'lucide-react';
 
+export const SPECIALTY_OPTIONS: string[] = [
+  'Cardiology',
+  'Neurology',
+  'Orthopedics',
+  'Oncology',
+  'Pediatrics',
+  'Dermatology',
+  'General Surgery',
+  'Gastroenterology',
+  'Urology',
+  'Ophthalmology',
+  'Endocrinology',
+  'Pulmonology / Respiratory Medicine',
+  'Nephrology',
+  'Rheumatology',
+  'Internal Medicine',
+  'Obstetrics & Gynecology',
+  'ENT / Otolaryngology',
+  'Psychiatry & Behavioral Health',
+  'Radiology & Imaging',
+  'Vascular Surgery',
+  'Neurosurgery',
+  'Pediatric Surgery',
+  'Plastic & Reconstructive Surgery',
+  'Emergency Medicine',
+  'Anesthesiology & Pain Medicine',
+  'Pathology',
+  'Other'
+];
+
 interface DoctorProfilePageProps {
   currentUser?: any;
   currentLang: LanguageCode;
@@ -36,14 +66,6 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
         d.name.toLowerCase().trim() === currentUser.fullName.toLowerCase().trim()
       );
       if (exactMatch) return exactMatch;
-
-      // Handle preset demo accounts
-      if (currentUser.id === 'doc-de-2' || currentUser.fullName?.toLowerCase().includes('sabine')) {
-        return doctors.find(d => d.id === 'doc-de-2') || MOCK_DOCTORS[0];
-      }
-      if (currentUser.id === 'usr-doc-jo-1' || currentUser.fullName?.toLowerCase().includes('layla')) {
-        return doctors.find(d => d.id === 'usr-doc-jo-1') || MOCK_DOCTORS[1];
-      }
 
       // Clean empty doctor profile for a newly registered physician
       return {
@@ -81,7 +103,40 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
         timeZoneOffsetLabel: currentUser.country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
       };
     }
-    return doctors[0] || MOCK_DOCTORS[0];
+    return doctors[0] || {
+      id: currentUser?.id || 'doc-new',
+      name: currentUser?.fullName || 'Dr. Medical Consultant',
+      title: '',
+      titleDe: '',
+      titleAr: '',
+      country: (currentUser?.country === 'DE' ? 'DE' : 'JO') as 'DE' | 'JO',
+      city: '',
+      hospital: '',
+      hospitalAr: '',
+      hospitalDe: '',
+      specialty: 'Cardiology' as Specialty,
+      subSpecialties: [],
+      languages: [],
+      experienceYears: 0,
+      rating: 5.0,
+      reviewCount: 0,
+      bio: '',
+      bioAr: '',
+      bioDe: '',
+      education: [],
+      certifications: [],
+      certificateDocs: [],
+      feeJod: 0,
+      feeEur: 0,
+      feeUsd: 0,
+      feeFileReviewEur: 0,
+      feeFileReviewJod: 0,
+      avatarUrl: '',
+      nextAvailable: '',
+      availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
+      timeZone: 'Asia/Amman',
+      timeZoneOffsetLabel: 'EET (Amman)'
+    };
   }, [currentUser, doctors]);
 
   const [doctor, setDoctor] = useState<Doctor>(defaultDoc);
@@ -133,7 +188,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
       : []
     );
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Auto sync USD fee: 1 EUR ~ 1.08 USD, 1 JOD ~ 1.41 USD
@@ -147,8 +202,24 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
     };
 
     setDoctor(updatedDoctor);
-    if (onUpdateDoctor) {
-      onUpdateDoctor(updatedDoctor);
+
+    try {
+      const res = await fetch(`/api/doctors/${updatedDoctor.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedDoctor)
+      });
+      const data = await res.json();
+      if (data.doctor && onUpdateDoctor) {
+        onUpdateDoctor(data.doctor);
+      } else if (onUpdateDoctor) {
+        onUpdateDoctor(updatedDoctor);
+      }
+    } catch (err) {
+      console.error('Error persisting doctor profile to server:', err);
+      if (onUpdateDoctor) {
+        onUpdateDoctor(updatedDoctor);
+      }
     }
 
     setIsSavedSuccess(true);
@@ -327,29 +398,50 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-5">
             <div className="relative group">
-              <img
-                src={doctor.avatarUrl || AVATAR_PRESETS[0]}
-                alt={doctor.name}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-teal-400 shadow-xl"
+              {doctor.avatarUrl ? (
+                <img
+                  src={doctor.avatarUrl}
+                  alt={doctor.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-teal-400 shadow-xl bg-slate-800"
+                />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-dashed border-teal-400/80 bg-slate-800/90 flex flex-col items-center justify-center text-teal-300 shadow-xl">
+                  <User className="w-8 h-8 text-teal-400" />
+                  <span className="text-[9px] font-bold text-teal-300 mt-1">Upload Photo</span>
+                </div>
+              )}
+
+              <input
+                type="file"
+                id="doctor-avatar-file-upload-input"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const updated = { ...doctor, avatarUrl: reader.result as string };
+                      setDoctor(updated);
+                      if (onUpdateDoctor) onUpdateDoctor(updated);
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                  }
+                }}
               />
-              <button
-                type="button"
-                onClick={() => setIsEditingAvatar(!isEditingAvatar)}
-                className="absolute -bottom-2 -right-2 bg-teal-600 hover:bg-teal-500 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"
-                title={t.changeAvatarPhoto}
+
+              <label
+                htmlFor="doctor-avatar-file-upload-input"
+                className="absolute -bottom-2 -right-2 bg-teal-600 hover:bg-teal-500 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                title="Upload Profile Photo"
               >
                 <Camera className="w-3.5 h-3.5" />
-              </button>
+              </label>
             </div>
 
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-sky-500/20 text-sky-300 border border-sky-400/30 text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full">
                   {t.doctorProfile}
-                </span>
-                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  {t.verifiedCrossBorderSpecialist}
                 </span>
               </div>
 
@@ -467,13 +559,42 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
 
               <div>
                 <label className="font-bold text-slate-800 block mb-1">{t.medicalSpecialtyTitle}</label>
-                <input
-                  type="text"
-                  value={doctor.title}
-                  onChange={(e) => setDoctor({ ...doctor, title: e.target.value, specialty: (e.target.value as Specialty) })}
-                  placeholder="e.g. Senior Consultant in Cardiology"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                />
+                <select
+                  value={
+                    SPECIALTY_OPTIONS.includes(doctor.specialty) 
+                      ? doctor.specialty 
+                      : (SPECIALTY_OPTIONS.includes(doctor.title) ? doctor.title : 'Other')
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'Other') {
+                      setDoctor({ ...doctor, specialty: 'Other' as Specialty, title: 'Medical Specialist' });
+                    } else {
+                      setDoctor({ ...doctor, specialty: val as Specialty, title: val });
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                >
+                  <option value="">-- Select Medical Specialty --</option>
+                  {SPECIALTY_OPTIONS.map(spec => (
+                    <option key={spec} value={spec}>{spec}</option>
+                  ))}
+                </select>
+
+                {(!SPECIALTY_OPTIONS.slice(0, -1).includes(doctor.specialty) && !SPECIALTY_OPTIONS.slice(0, -1).includes(doctor.title)) || doctor.specialty === 'Other' ? (
+                  <div className="mt-2 space-y-1 animate-fade-in">
+                    <label className="text-[11px] font-bold text-teal-700 block">
+                      Custom Medical Specialty / Sub-specialty Title:
+                    </label>
+                    <input
+                      type="text"
+                      value={doctor.title}
+                      onChange={(e) => setDoctor({ ...doctor, title: e.target.value, specialty: (e.target.value || 'Other') as Specialty })}
+                      placeholder="Type your custom medical specialty..."
+                      className="w-full bg-white border border-teal-300 rounded-xl p-2.5 text-xs text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none shadow-sm"
+                    />
+                  </div>
+                ) : null}
               </div>
 
               <div>

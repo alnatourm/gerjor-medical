@@ -36,107 +36,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const payload = authMode === 'register' ? {
+        email,
+        password,
+        fullName,
+        phone,
+        country,
+        role
+      } : {
+        email,
+        password
+      };
 
-      if (role === 'doctor' && authMode === 'register') {
-        // Create clean empty Doctor profile object for the newly registered physician
-        // All fields start completely empty so the physician can enter their real data.
-        const createdDoctor: Doctor = {
-          id: `usr-doc-${Date.now()}`,
-          name: fullName.trim() || 'Dr. Physician Consultant',
-          title: '',
-          titleDe: '',
-          titleAr: '',
-          country: country === 'DE' ? 'DE' : 'JO',
-          city: '',
-          hospital: '',
-          hospitalAr: '',
-          hospitalDe: '',
-          specialty: 'Cardiology' as Specialty,
-          subSpecialties: [],
-          languages: [],
-          experienceYears: 0,
-          rating: 5.0,
-          reviewCount: 0,
-          bio: '',
-          bioAr: '',
-          bioDe: '',
-          education: [],
-          certifications: [],
-          certificateDocs: [],
-          feeJod: 0,
-          feeEur: 0,
-          feeUsd: 0,
-          feeFileReviewEur: 0,
-          feeFileReviewJod: 0,
-          avatarUrl: '',
-          nextAvailable: '',
-          availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
-          timeZone: (country === 'DE' ? 'Europe/Berlin' : 'Asia/Amman') as 'Europe/Berlin' | 'Asia/Amman',
-          timeZoneOffsetLabel: country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
-        };
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-        const authenticatedUser: UserAccount = {
-          id: createdDoctor.id,
-          fullName: createdDoctor.name,
-          email,
-          phone,
-          role: 'doctor',
-          country: country === 'DE' ? 'DE' : 'JO',
-          preferredLanguage: preferredLang,
-          isAuthenticated: true
-        };
+      const data = await res.json();
 
-        onLoginSuccess(authenticatedUser, createdDoctor);
-        onClose();
+      if (!res.ok || data.error) {
+        setErrorMessage(data.error || 'Authentication failed. Please check credentials.');
+        setIsLoading(false);
         return;
       }
 
-      // Standard Login / Patient Registration Flow
-      const authenticatedUser: UserAccount = {
-        id: `user-${Date.now()}`,
-        fullName: authMode === 'login' ? (role === 'doctor' ? 'Prof. Dr. med. Sabine Weber' : (fullName || 'Patient User')) : fullName,
-        email,
-        phone,
-        role,
-        country,
-        preferredLanguage: preferredLang,
-        isAuthenticated: true,
-        patientProfile: role === 'patient' ? {
-          fullName: fullName,
-          email,
-          phone,
-          dob: '',
-          gender: '',
-          passportId: '',
-          countryOfResidence: country,
-          chronicConditions: [],
-          allergies: [],
-          pastSurgeries: '',
-          currentMedications: [],
-          bloodType: '',
-          familyHistory: '',
-          insuranceProviderName: '',
-          insurancePolicyNumber: '',
-          coverageRegion: 'International / Cross-Border',
-          insuranceExpiry: '',
-          insuranceCardUploaded: false,
-          preferredLanguage: preferredLang,
-          preferredContactMethod: 'Email',
-          emergencyContactName: '',
-          emergencyContactRelation: '',
-          emergencyContactPhone: ''
-        } : undefined
-      };
+      if (data.token) {
+        localStorage.setItem('medlink_token', data.token);
+      }
 
-      onLoginSuccess(authenticatedUser);
+      setIsLoading(false);
+      onLoginSuccess(data.user, data.doctor);
       onClose();
-    }, 500);
+    } catch (err) {
+      console.error('Auth error:', err);
+      setErrorMessage('Network error during authentication. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   const handleDemoSignIn = (presetUser: 'patient' | 'de_doc' | 'jo_doc') => {
@@ -241,43 +187,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Demo Quick Sign-In Presets */}
-        {authMode === 'login' && (
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
-            <span className="text-[11px] font-bold text-teal-400 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> {t.demoAccountsNotice}
-            </span>
 
-            <div className="grid grid-cols-3 gap-1.5 text-[11px] font-semibold">
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn('patient')}
-                className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-teal-500 rounded-xl text-center text-slate-200 transition-colors"
-              >
-                <span className="block text-white font-bold">{t.demoPatient}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn('de_doc')}
-                className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500 rounded-xl text-center text-slate-200 transition-colors"
-              >
-                <span className="block text-white font-bold">{t.demoDocDe}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn('jo_doc')}
-                className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500 rounded-xl text-center text-slate-200 transition-colors"
-              >
-                <span className="block text-white font-bold">{t.demoDocJo}</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Main Auth Form */}
         <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+          
+          {errorMessage && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-medium text-center">
+              {errorMessage}
+            </div>
+          )}
           
           {/* Account Role Selector (Patient vs Physician) */}
           <div>

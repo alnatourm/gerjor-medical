@@ -107,8 +107,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
-  const handleFinalConfirm = () => {
-    onCompleteBooking({
+  const handleFinalConfirm = async () => {
+    const bookingData: Partial<Appointment> = {
       doctorId: doctor.id,
       doctorName: doctor.name,
       doctorSpecialty: doctor.specialty,
@@ -125,7 +125,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       aiSummary: aiSummaryData?.clinicalSummary || 'Pre-consultation intake completed.',
       totalFee: currentCurrency === 'EUR' ? doctor.feeEur : (currentCurrency === 'JOD' ? doctor.feeJod : doctor.feeUsd),
       currency: currentCurrency
-    });
+    };
+
+    try {
+      await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      });
+    } catch (err) {
+      console.error('Error saving appointment to server:', err);
+    }
+
+    onCompleteBooking(bookingData);
   };
 
   return (

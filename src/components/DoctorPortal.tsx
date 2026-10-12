@@ -7,7 +7,7 @@ import {
   User, ShieldCheck, CheckCircle2, ChevronRight, Pill, Plus, 
   Trash2, Award, Building, Globe, Search, Filter, Upload, 
   AlertCircle, Eye, Check, Phone, Mail, FileUp, Activity,
-  Lock, RefreshCw, X
+  Lock, RefreshCw, X, FileCheck, MessageSquare, Send
 } from 'lucide-react';
 
 interface DoctorPortalProps {
@@ -46,14 +46,6 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
       );
       if (exactMatch) return exactMatch;
 
-      // Handle preset demo accounts
-      if (currentUser.id === 'doc-de-2' || currentUser.fullName?.toLowerCase().includes('sabine')) {
-        return doctors.find(d => d.id === 'doc-de-2') || MOCK_DOCTORS[0];
-      }
-      if (currentUser.id === 'usr-doc-jo-1' || currentUser.fullName?.toLowerCase().includes('layla')) {
-        return doctors.find(d => d.id === 'usr-doc-jo-1') || MOCK_DOCTORS[1];
-      }
-
       // Return newly registered doctor profile
       return {
         id: currentUser.id,
@@ -90,7 +82,40 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
         timeZoneOffsetLabel: currentUser.country === 'DE' ? 'CET (Berlin) / EET (Amman +1h)' : 'EET (Amman) / CET (Berlin -1h)'
       };
     }
-    return doctors[0] || MOCK_DOCTORS[0];
+    return doctors[0] || {
+      id: currentUser?.id || 'doc-new',
+      name: currentUser?.fullName || 'Dr. Medical Consultant',
+      title: '',
+      titleDe: '',
+      titleAr: '',
+      country: (currentUser?.country === 'DE' ? 'DE' : 'JO') as 'DE' | 'JO',
+      city: '',
+      hospital: '',
+      hospitalAr: '',
+      hospitalDe: '',
+      specialty: 'Cardiology' as Specialty,
+      subSpecialties: [],
+      languages: [],
+      experienceYears: 0,
+      rating: 5.0,
+      reviewCount: 0,
+      bio: '',
+      bioAr: '',
+      bioDe: '',
+      education: [],
+      certifications: [],
+      certificateDocs: [],
+      feeJod: 0,
+      feeEur: 0,
+      feeUsd: 0,
+      feeFileReviewEur: 0,
+      feeFileReviewJod: 0,
+      avatarUrl: '',
+      nextAvailable: '',
+      availableTypes: ['video', 'second_opinion', 'record_review'] as ConsultationType[],
+      timeZone: 'Asia/Amman',
+      timeZoneOffsetLabel: 'EET (Amman)'
+    };
   }, [currentUser, doctors]);
 
   const [activeDoctor, setActiveDoctor] = useState<Doctor>(defaultDoc);
@@ -163,11 +188,8 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
   const [medDosage, setMedDosage] = useState('');
   const [medFreq, setMedFreq] = useState('');
   const [medDuration, setMedDuration] = useState('');
-  const [prescNotes, setPrescNotes] = useState('Continue current regimen. Drink adequate water and avoid strenuous physical exertion for 14 days.');
-  const [medicinesList, setMedicinesList] = useState([
-    { name: 'Bisoprolol Fumarate', dosage: '2.5 mg', frequency: 'Once daily (Morning)', duration: '30 days' },
-    { name: 'Magnesium Citrate', dosage: '150 mg', frequency: 'Once daily before bedtime', duration: '60 days' }
-  ]);
+  const [prescNotes, setPrescNotes] = useState('');
+  const [medicinesList, setMedicinesList] = useState<Array<{ name: string; dosage: string; frequency: string; duration: string }>>([]);
   const [prescIssuedSuccess, setPrescIssuedSuccess] = useState(false);
 
   // New Record Upload Modal for Selected Patient Vault
@@ -176,6 +198,78 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
   const [newVaultType, setNewVaultType] = useState<'Lab Result' | 'Doctor Report' | 'Photo / Scan' | 'MRI/CT Scan' | 'Prescription'>('Doctor Report');
   const [newVaultNotes, setNewVaultNotes] = useState('');
   const [newVaultFileName, setNewVaultFileName] = useState('');
+
+  // Doctor Written Opinion & Case Q&A Reply State
+  const [doctorOpinionInput, setDoctorOpinionInput] = useState('');
+  const [doctorReplyText, setDoctorReplyText] = useState('');
+  const [isSavingOpinion, setIsSavingOpinion] = useState(false);
+  const [opinionSaveSuccess, setOpinionSaveSuccess] = useState(false);
+
+  // Keep doctorOpinionInput in sync with selectedApp
+  React.useEffect(() => {
+    if (selectedApp) {
+      setDoctorOpinionInput(selectedApp.doctorOpinion || '');
+    }
+  }, [selectedApp]);
+
+  const handleSaveDoctorOpinion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!doctorOpinionInput.trim() || !selectedApp) return;
+
+    setIsSavingOpinion(true);
+    setOpinionSaveSuccess(false);
+
+    const opinionDate = new Date().toISOString().split('T')[0];
+
+    try {
+      await fetch(`/api/appointments/${selectedApp.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorOpinion: doctorOpinionInput.trim(),
+          doctorOpinionDate: opinionDate,
+          status: 'completed'
+        })
+      });
+
+      selectedApp.doctorOpinion = doctorOpinionInput.trim();
+      selectedApp.doctorOpinionDate = opinionDate;
+      selectedApp.status = 'completed';
+      setOpinionSaveSuccess(true);
+      setTimeout(() => setOpinionSaveSuccess(false), 4000);
+    } catch (err) {
+      console.error('Error saving doctor opinion:', err);
+    } finally {
+      setIsSavingOpinion(false);
+    }
+  };
+
+  const handleSendDoctorMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!doctorReplyText.trim() || !selectedApp) return;
+
+    const newReply = {
+      id: `msg-${Date.now()}`,
+      sender: 'doctor' as const,
+      senderName: `Dr. ${activeDoctor.name}`,
+      text: doctorReplyText.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updatedMsgs = [...(selectedApp.caseMessages || []), newReply];
+    selectedApp.caseMessages = updatedMsgs;
+    setDoctorReplyText('');
+
+    try {
+      await fetch(`/api/appointments/${selectedApp.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caseMessages: updatedMsgs })
+      });
+    } catch (err) {
+      console.error('Error sending doctor message:', err);
+    }
+  };
 
   const handleAddMedicine = () => {
     if (medName.trim() && medDosage.trim()) {
@@ -196,7 +290,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
     setMedicinesList(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleIssueFinalPrescription = (e: React.FormEvent) => {
+  const handleIssueFinalPrescription = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedApp) return;
 
@@ -204,8 +298,21 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
       date: new Date().toISOString().split('T')[0],
       medicines: medicinesList,
       notes: prescNotes,
-      doctorSignature: `${activeDoctor.name}, ${activeDoctor.title} (${activeDoctor.hospital})`
+      doctorSignature: `${activeDoctor.name}, ${activeDoctor.title || 'Consultant'} (${activeDoctor.hospital || 'MedLink Partner Hospital'})`
     };
+
+    try {
+      await fetch(`/api/appointments/${selectedApp.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'completed',
+          prescription: newPrescription
+        })
+      });
+    } catch (err) {
+      console.error('Error saving prescription to server:', err);
+    }
 
     if (onIssuePrescription) {
       onIssuePrescription(selectedApp.id, newPrescription);
@@ -215,12 +322,14 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
     setTimeout(() => setPrescIssuedSuccess(false), 5000);
   };
 
-  const handleSaveVaultRecord = (e: React.FormEvent) => {
+  const handleSaveVaultRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVaultTitle.trim() || !selectedApp) return;
 
     const newRecord: MedicalRecord = {
       id: `rec-${Date.now()}`,
+      patientId: selectedApp.patientId || selectedApp.patientEmail,
+      doctorId: activeDoctor.id,
       title: newVaultTitle.trim(),
       type: newVaultType,
       date: new Date().toISOString().split('T')[0],
@@ -231,6 +340,16 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
       notes: newVaultFileName ? `Attached Document: ${newVaultFileName}\n${newVaultNotes}` : newVaultNotes,
       aiSummary: `Doctor Consult Summary issued by ${activeDoctor.name} for ${selectedApp.patientName}`
     };
+
+    try {
+      await fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRecord)
+      });
+    } catch (err) {
+      console.error('Error adding record to patient vault:', err);
+    }
 
     if (onAddRecordToPatientVault) {
       onAddRecordToPatientVault(newRecord);
@@ -482,13 +601,20 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onOpenVirtualClinic(selectedApp)}
-                  className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs rounded-xl shadow transition-all flex items-center gap-2 shrink-0 hover:scale-105"
-                >
-                  <Video className="w-4 h-4 text-slate-950" />
-                  <span>{t.enterLiveVirtualClinicRoom}</span>
-                </button>
+                {selectedApp.consultationType === 'video' ? (
+                  <button
+                    onClick={() => onOpenVirtualClinic(selectedApp)}
+                    className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs rounded-xl shadow transition-all flex items-center gap-2 shrink-0 hover:scale-105"
+                  >
+                    <Video className="w-4 h-4 text-slate-950" />
+                    <span>{t.enterLiveVirtualClinicRoom}</span>
+                  </button>
+                ) : (
+                  <span className="px-3.5 py-2 bg-teal-950 text-teal-300 border border-teal-800/80 text-xs font-bold rounded-xl flex items-center gap-1.5 shrink-0">
+                    <FileText className="w-4 h-4 text-teal-400" />
+                    <span>📋 Asynchronous Case Review & Q&A</span>
+                  </span>
+                )}
               </div>
 
               {/* Patient Contact & Clinical Specs Grid */}
@@ -603,6 +729,94 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
                     "{selectedApp.symptoms || t.directSpecialistBanner}"
                   </div>
                 </div>
+
+                {/* Doctor Official Written Opinion & Recommendations Editor */}
+                <form onSubmit={handleSaveDoctorOpinion} className="space-y-3 bg-teal-50/60 border border-teal-200 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-teal-950 text-xs flex items-center gap-1.5">
+                      <FileCheck className="w-4 h-4 text-teal-600" />
+                      <span>Issue Official Medical Opinion & Recommendations for {selectedApp.patientName}:</span>
+                    </label>
+                    {opinionSaveSuccess && (
+                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded">
+                        ✓ Opinion Submitted to Patient
+                      </span>
+                    )}
+                  </div>
+
+                  <textarea
+                    rows={4}
+                    required
+                    value={doctorOpinionInput}
+                    onChange={(e) => setDoctorOpinionInput(e.target.value)}
+                    placeholder="Enter official medical findings, diagnosis, recommendations, and next steps for the patient..."
+                    className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-teal-500 leading-relaxed shadow-sm"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={isSavingOpinion || !doctorOpinionInput.trim()}
+                    className="px-5 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{isSavingOpinion ? 'Saving...' : 'Submit Official Opinion to Patient'}</span>
+                  </button>
+                </form>
+
+                {/* Patient Case Q&A Messages & Reply Box */}
+                <div className="space-y-3 bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                  <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4 text-teal-600" />
+                    <span>Patient Case Q&A & Follow-up Discussion ({selectedApp.caseMessages?.length || 0}):</span>
+                  </span>
+
+                  {/* Messages List */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 max-h-48 overflow-y-auto space-y-2 text-xs">
+                    {(!selectedApp.caseMessages || selectedApp.caseMessages.length === 0) ? (
+                      <p className="text-slate-400 text-center py-2 text-xs">
+                        No questions sent by patient for this case yet.
+                      </p>
+                    ) : (
+                      selectedApp.caseMessages.map(msg => (
+                        <div
+                          key={msg.id}
+                          className={`p-2.5 rounded-xl max-w-md ${
+                            msg.sender === 'doctor'
+                              ? 'bg-teal-600 text-white ml-auto'
+                              : 'bg-slate-100 text-slate-900 mr-auto'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-0.5 text-[10px] opacity-80 font-bold">
+                            <span>{msg.senderName}</span>
+                            <span>{msg.timestamp}</span>
+                          </div>
+                          <p className="leading-relaxed text-xs">{msg.text}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Reply Form */}
+                  <form onSubmit={handleSendDoctorMessage} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={doctorReplyText}
+                      onChange={(e) => setDoctorReplyText(e.target.value)}
+                      placeholder={`Reply to ${selectedApp.patientName}'s questions...`}
+                      className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-teal-500 shadow-sm"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!doctorReplyText.trim()}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Reply</span>
+                    </button>
+                  </form>
+                </div>
+
               </div>
             )}
 
@@ -682,7 +896,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({
                         </div>
 
                         <div className="space-y-1.5">
-                          {p.medicines.map((m, mIdx) => (
+                          {p.medicines.map((m: { name: string; dosage: string; frequency: string; duration: string }, mIdx: number) => (
                             <div key={mIdx} className="bg-white p-2.5 rounded-xl border border-teal-100 flex items-center justify-between font-medium">
                               <div>
                                 <strong className="text-slate-900 block">{m.name} ({m.dosage})</strong>
