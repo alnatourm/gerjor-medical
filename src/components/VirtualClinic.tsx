@@ -27,36 +27,109 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
   // Tab state inside virtual clinic
   const [activeSideTab, setActiveSideTab] = useState<'captions' | 'notes' | 'records' | 'prescription'>('captions');
 
-  // Simulated Live Subtitles
-  const [captions, setCaptions] = useState<Array<{ sender: string; original: string; translatedAr: string; translatedDe: string; translatedEn: string; time: string }>>([
-    {
-      sender: 'Prof. Dr. med. Sabine Weber (Berlin)',
-      original: 'Guten Tag Herr Al-Masmoudi. Ich habe Ihren MRT-Befund aus Amman geprüft.',
-      translatedAr: 'مساء الخير أستاذ عمر. لقد راجعت تقرير الرنين المغناطيسي الصادر من عمان.',
-      translatedDe: 'Guten Tag Herr Al-Masmoudi. Ich habe Ihren MRT-Befund aus Amman geprüft.',
-      translatedEn: 'Good day Mr. Al-Masmoudi. I have reviewed your MRI scan from Amman.',
-      time: '15:02:10'
-    },
-    {
-      sender: 'Patient (Omar Al-Masmoudi)',
-      original: 'أهلاً دكتورة. أردت التأكد من عدم وجود أي خطورة بالنسبة للصداع التوتر المتكرر.',
-      translatedAr: 'أهلاً دكتورة. أردت التأكد من عدم وجود أي خطورة بالنسبة للصداع التوتر المتكرر.',
-      translatedDe: 'Hallo Frau Doktor. Ich wollte sicherstellen, dass keine Gefahr bezüglich der Kopfschmerzen besteht.',
-      translatedEn: 'Hello Doctor. I wanted to verify there is no acute risk regarding the recurrent headaches.',
-      time: '15:02:45'
+  // Real Live Subtitles & Chat Messages from Appointment
+  const [captions, setCaptions] = useState<Array<{ sender: string; original: string; translatedAr: string; translatedDe: string; translatedEn: string; time: string }>>(() => {
+    if (appointment?.caseMessages && appointment.caseMessages.length > 0) {
+      return appointment.caseMessages.map(m => ({
+        sender: m.senderName,
+        original: m.text,
+        translatedAr: m.text,
+        translatedDe: m.text,
+        translatedEn: m.text,
+        time: m.timestamp
+      }));
     }
-  ]);
+    return [];
+  });
 
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
 
-  // Live Clinical Prescription Generator
-  const [rxMeds, setRxMeds] = useState([
-    { name: 'Topiramate', dosage: '25 mg', frequency: 'Once daily at bedtime', duration: '30 days' },
-    { name: 'Magnesium Orotate', dosage: '500 mg', frequency: 'Twice daily with meals', duration: '60 days' }
-  ]);
-  const [rxNotes, setRxNotes] = useState('Maintain regular sleep schedule, stay hydrated, repeat neurology evaluation in 6 weeks.');
-  const [rxIssued, setRxIssued] = useState(false);
+  // Real Clinical Prescription Generator
+  const [rxMeds, setRxMeds] = useState<Array<{ name: string; dosage: string; frequency: string; duration: string }>>(() => {
+    if (appointment?.prescription?.medicines) {
+      return appointment.prescription.medicines;
+    }
+    return [];
+  });
+  const [rxNotes, setRxNotes] = useState<string>(appointment?.prescription?.notes || '');
+  const [rxIssued, setRxIssued] = useState<boolean>(!!appointment?.prescription);
+
+  // Live Clinical Notes State
+  const [liveNotesText, setLiveNotesText] = useState<string>(appointment?.doctorOpinion || '');
+  const [isNotesSaved, setIsNotesSaved] = useState<boolean>(false);
+
+  // New Medicine Inputs in Virtual Clinic
+  const [newMedName, setNewMedName] = useState('');
+  const [newMedDosage, setNewMedDosage] = useState('');
+  const [newMedFreq, setNewMedFreq] = useState('');
+
+  const handleAddMedInClinic = () => {
+    if (newMedName.trim() && newMedDosage.trim()) {
+      setRxMeds(prev => [...prev, {
+        name: newMedName.trim(),
+        dosage: newMedDosage.trim(),
+        frequency: newMedFreq.trim() || 'Once daily',
+        duration: '30 days'
+      }]);
+      setNewMedName('');
+      setNewMedDosage('');
+      setNewMedFreq('');
+    }
+  };
+
+  const handleRemoveMedInClinic = (idx: number) => {
+    setRxMeds(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveLiveNotes = async () => {
+    if (!liveNotesText.trim()) return;
+    if (appointment) {
+      try {
+        await fetch(`/api/appointments/${appointment.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doctorOpinion: liveNotesText.trim(),
+            doctorOpinionDate: new Date().toISOString().split('T')[0]
+          })
+        });
+        appointment.doctorOpinion = liveNotesText.trim();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setIsNotesSaved(true);
+    setTimeout(() => setIsNotesSaved(false), 3000);
+  };
+
+  const handleIssueRxInClinic = async () => {
+    const prescriptionObj = {
+      date: new Date().toISOString().split('T')[0],
+      medicines: rxMeds,
+      notes: rxNotes,
+      doctorSignature: `${appointment?.doctorName || 'Specialist Physician'}, ${appointment?.doctorSpecialty || 'Consultant'}`
+    };
+
+    if (appointment) {
+      try {
+        await fetch(`/api/appointments/${appointment.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prescription: prescriptionObj,
+            status: 'completed'
+          })
+        });
+        appointment.prescription = prescriptionObj;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    setRxIssued(true);
+    setTimeout(() => setRxIssued(false), 5000);
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,29 +500,55 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
 
               {/* TAB 2: Live Clinical Notes */}
               {activeSideTab === 'notes' && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.doctorNotes}</h4>
-                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-2 text-slate-300">
-                    <p>• Patient presents with recurrent tension headache (duration: 3 weeks).</p>
-                    <p>• Amman MRI scan evaluated: No intracranial lesions, ventricular size within normal limits.</p>
-                    <p>• Recommendation: Conservative management, prophylactic Topiramate therapy.</p>
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.doctorNotes}</h4>
+                    {isNotesSaved && (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+                        ✓ Saved to Patient File
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <textarea
+                      value={liveNotesText}
+                      onChange={(e) => setLiveNotesText(e.target.value)}
+                      rows={6}
+                      placeholder="Type clinical observations, MRI evaluation notes, or medical recommendations for the patient..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-teal-500 leading-relaxed"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleSaveLiveNotes}
+                      className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{currentLang === 'ar' ? 'حفظ الملاحظات في ملف المريض' : 'Save Clinical Notes'}</span>
+                    </button>
                   </div>
                 </div>
               )}
 
               {/* TAB 3: Diagnostic Viewer */}
               {activeSideTab === 'records' && (
-                <div className="space-y-3">
+                <div className="space-y-3 animate-fade-in">
                   <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.medicalViewer}</h4>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
                     <div className="flex items-center justify-between text-slate-300">
-                      <span className="font-bold text-white">Amman Brain MRI (DICOM)</span>
+                      <span className="font-bold text-white">Amman Brain MRI & Diagnostic Files</span>
                       <span className="text-[10px] text-teal-400">PDF / DICOM</span>
                     </div>
-                    <p className="text-[11px] text-slate-400">Uploaded 3 days ago · ABDALI HOSPITAL AMMAN</p>
-                    <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1">
+                    <p className="text-[11px] text-slate-400">
+                      {appointment?.symptoms || 'Uploaded diagnostic reports, lab test bloodwork, and medical scans.'}
+                    </p>
+                    <button 
+                      onClick={() => alert(currentLang === 'ar' ? 'جاري فتح مستعرض صور الأشعة والتقارير الطبية...' : 'Opening Fullscreen Diagnostic Viewer...')}
+                      className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1"
+                    >
                       <FileText className="w-3.5 h-3.5" />
-                      <span>Open Fullscreen Viewer</span>
+                      <span>Open Fullscreen Diagnostic Viewer</span>
                     </button>
                   </div>
                 </div>
@@ -457,23 +556,94 @@ export const VirtualClinic: React.FC<VirtualClinicProps> = ({
 
               {/* TAB 4: Digital E-Prescription */}
               {activeSideTab === 'prescription' && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.eprescriptionTab}</h4>
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.eprescriptionTab}</h4>
+                    {rxIssued && (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+                        ✓ Prescription Issued
+                      </span>
+                    )}
+                  </div>
+
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-3 text-xs">
-                    {rxMeds.map((med, i) => (
-                      <div key={i} className="border-b border-slate-800 pb-2">
-                        <span className="font-bold text-white block">{med.name} ({med.dosage})</span>
-                        <span className="text-slate-400 text-[11px] block">{med.frequency} · {med.duration}</span>
+                    {/* Active Prescribed Medicines List */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Prescribed Medications ({rxMeds.length}):</span>
+                      {rxMeds.map((med, i) => (
+                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-white block">{med.name} ({med.dosage})</span>
+                            <span className="text-slate-400 text-[10px] block">{med.frequency} · {med.duration}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMedInClinic(i)}
+                            className="text-slate-500 hover:text-rose-400 text-[10px] font-bold p-1"
+                            title="Remove"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add Medicine Inputs */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <span className="text-[10px] font-bold text-teal-300 block">+ Add Medicine Name:</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <input
+                          type="text"
+                          placeholder="Medicine Name (e.g. Topiramate)"
+                          value={newMedName}
+                          onChange={(e) => setNewMedName(e.target.value)}
+                          className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Dosage (e.g. 25 mg)"
+                          value={newMedDosage}
+                          onChange={(e) => setNewMedDosage(e.target.value)}
+                          className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
                       </div>
-                    ))}
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          placeholder="Frequency (e.g. Once daily at bedtime)"
+                          value={newMedFreq}
+                          onChange={(e) => setNewMedFreq(e.target.value)}
+                          className="flex-1 bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddMedInClinic}
+                          className="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg text-xs shrink-0"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prescription Instructions */}
+                    <div className="pt-2 border-t border-slate-800">
+                      <label className="text-[10px] font-bold text-slate-400 block mb-1">Prescription Notes:</label>
+                      <textarea
+                        value={rxNotes}
+                        onChange={(e) => setRxNotes(e.target.value)}
+                        rows={2}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                      />
+                    </div>
+
                     <button
-                      onClick={() => setRxIssued(true)}
-                      className={`w-full py-2 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 ${
-                        rxIssued ? 'bg-emerald-600 text-white' : 'bg-teal-600 hover:bg-teal-500 text-white'
+                      onClick={handleIssueRxInClinic}
+                      className={`w-full py-2.5 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 ${
+                        rxIssued ? 'bg-emerald-600 text-white' : 'bg-teal-600 hover:bg-teal-500 text-white shadow-md'
                       }`}
                     >
                       <Check className="w-4 h-4" />
-                      <span>{rxIssued ? 'Prescription Issued & Signed ✓' : 'Issue Official Cross-Border Prescription'}</span>
+                      <span>{rxIssued ? 'Prescription Signed & Saved ✓' : 'Issue & Sign Official E-Prescription'}</span>
                     </button>
                   </div>
                 </div>

@@ -928,7 +928,7 @@ export const CountrySelectionFlow: React.FC<CountrySelectionFlowProps> = ({
                   type="button"
                   onClick={() => {
                     const specToMatch = selectedSpecialty === 'ALL' ? 'Neurology' : selectedSpecialty;
-                    const matchedDoc = countryDoctors.find(d => d.specialty === specToMatch) || countryDoctors[0] || MOCK_DOCTORS[0];
+                    const matchedDoc = countryDoctors.find(d => d.specialty === specToMatch) || countryDoctors[0] || null;
                     setSelectedDoctor(matchedDoc);
                   }}
                   className="w-full py-3.5 bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"

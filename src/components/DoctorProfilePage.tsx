@@ -584,13 +584,13 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                 {(!SPECIALTY_OPTIONS.slice(0, -1).includes(doctor.specialty) && !SPECIALTY_OPTIONS.slice(0, -1).includes(doctor.title)) || doctor.specialty === 'Other' ? (
                   <div className="mt-2 space-y-1 animate-fade-in">
                     <label className="text-[11px] font-bold text-teal-700 block">
-                      Custom Medical Specialty / Sub-specialty Title:
+                      {t.customSpecialtyLabel}
                     </label>
                     <input
                       type="text"
                       value={doctor.title}
                       onChange={(e) => setDoctor({ ...doctor, title: e.target.value, specialty: (e.target.value || 'Other') as Specialty })}
-                      placeholder="Type your custom medical specialty..."
+                      placeholder={t.customSpecialtyPlaceholder}
                       className="w-full bg-white border border-teal-300 rounded-xl p-2.5 text-xs text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none shadow-sm"
                     />
                   </div>
@@ -760,7 +760,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-teal-600" />
-                <h3 className="font-bold text-slate-900 text-sm">Sub-Specialties & Clinical Focus</h3>
+                <h3 className="font-bold text-slate-900 text-sm">{t.subSpecialtiesTitle}</h3>
               </div>
               <button
                 type="button"
@@ -768,13 +768,13 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                 className="px-3 py-1 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 text-xs font-bold rounded-lg flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Sub-Specialty</span>
+                <span>{t.addSubSpecialtyBtn}</span>
               </button>
             </div>
 
             {doctor.subSpecialties.length === 0 ? (
               <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-slate-500 text-xs font-medium">
-                No sub-specialties or focus tags added yet. Click <span className="font-bold text-teal-700">+ Add Sub-Specialty</span> to enter your areas of clinical focus.
+                {t.noSubSpecialtiesNotice}
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
@@ -804,7 +804,7 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-teal-600" />
-                <h3 className="font-bold text-slate-900 text-sm">Medical Certificates & Diplomas</h3>
+                <h3 className="font-bold text-slate-900 text-sm">{t.medCertificatesTitle}</h3>
               </div>
               <button
                 type="button"
@@ -812,18 +812,18 @@ export const DoctorProfilePage: React.FC<DoctorProfilePageProps> = ({
                 className="px-3 py-1 bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200 text-[11px] font-bold rounded-lg flex items-center gap-1 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Upload Certificate</span>
+                <span>{t.uploadCertificateBtn}</span>
               </button>
             </div>
 
             <p className="text-[11px] text-slate-500">
-              Upload medical certificates, Facharzt diplomas, or fellowship qualifications to display on your profile.
+              {t.certUploadDesc}
             </p>
 
             {/* List of Doctor's Certificates */}
             {certDocsList.length === 0 ? (
               <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-slate-500 text-xs font-medium">
-                No board licenses or certificates added yet. Click <span className="font-bold text-emerald-700">+ Upload Certificate</span> to upload your diploma or medical license.
+                {t.noCertificatesNotice}
               </div>
             ) : (
               <div className="space-y-3">

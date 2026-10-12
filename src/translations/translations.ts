@@ -464,9 +464,24 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     licenseNumberLabel: 'Medical Council License / Registration # *',
     languagesSpokenLabel: 'Spoken Languages *',
     videoRateLabel: 'Live Video Rate (EUR €) *',
-    experienceYearsLabel: 'Years of Experience *',
     doctorRegisterStepTitle: 'Physician Credentials & Medical Major Registration',
-    doctorRegisterSubtitle: 'Enter your clinical major, hospital affiliation, and medical license to create your verified consultant profile.'
+    doctorRegisterSubtitle: 'Enter your clinical major, hospital affiliation, and medical license to create your verified consultant profile.',
+    customSpecialtyLabel: 'Custom Medical Specialty / Sub-specialty Title:',
+    customSpecialtyPlaceholder: 'Type your custom medical specialty...',
+    subSpecialtiesTitle: 'Sub-Specialties & Clinical Focus',
+    addSubSpecialtyBtn: 'Add Sub-Specialty',
+    noSubSpecialtiesNotice: 'No sub-specialties or focus tags added yet. Click + Add Sub-Specialty to enter your areas of clinical focus.',
+    medCertificatesTitle: 'Medical Certificates & Diplomas',
+    uploadCertificateBtn: 'Upload Certificate',
+    certUploadDesc: 'Upload medical certificates, Facharzt diplomas, or fellowship qualifications to display on your profile.',
+    noCertificatesNotice: 'No board licenses or certificates added yet. Click + Upload Certificate to upload your diploma or medical license.',
+    addLanguageBtn: 'Add Language',
+    footerBrandDesc: 'Connecting patients with premier medical specialists across Amman, Berlin, Heidelberg, and Munich. Real-time trilingual AI translation and dual timezone tele-clinic.',
+    footerGdprNotice: 'GDPR & Jordanian Health Privacy Compliant',
+    footerAmmanHubTitle: 'Amman Medical Hub 🇯🇴',
+    footerGermanHubTitle: 'German Medical Hub 🇩🇪',
+    footerPortalServicesTitle: 'Portal Services',
+    noDoctorsInCorridorNotice: 'No individual physicians registered in this corridor yet. Your case will be assigned to the Specialist Medical Board Queue.'
   },
 
   ar: {
@@ -934,7 +949,23 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     videoRateLabel: 'رسوم الاستشارة المباشرة (يورو €) *',
     experienceYearsLabel: 'سنوات الخبرة السريرية *',
     doctorRegisterStepTitle: 'تسجيل أوراق الاعتماد والتخصص الطبي للطبيب',
-    doctorRegisterSubtitle: 'أدخل تخصصك الطبي والمستشفى ورقم الترخيص لإنشاء ملفك الاستشاري المعتمد.'
+    doctorRegisterSubtitle: 'أدخل تخصصك الطبي والمستشفى ورقم الترخيص لإنشاء ملفك الاستشاري المعتمد.',
+    customSpecialtyLabel: 'التخصص الطبي المخصص / العنوان الفرعي:',
+    customSpecialtyPlaceholder: 'اكتب تخصصك الطبي المخصص...',
+    subSpecialtiesTitle: 'التخصصات الدقيقة والتركيز السريري',
+    addSubSpecialtyBtn: 'إضافة تخصص دقيق',
+    noSubSpecialtiesNotice: 'لم يتم إضافة تخصصات دقيقة بعد. انقر على + إضافة تخصص دقيق لإدخال مجالات تركيزك السريري.',
+    medCertificatesTitle: 'الشهادات والترخيصات الطبية',
+    uploadCertificateBtn: 'رفع شهادة',
+    certUploadDesc: 'ارفع الشهادات الطبية، شهادات الاختصاص، أو الزمالة لعرضها في ملفك الشخصي.',
+    noCertificatesNotice: 'لم يتم إضافة شهادات بعد. انقر على + رفع شهادة لإرفاق دبلومك أو ترخيصك الطبي.',
+    addLanguageBtn: 'إضافة لغة',
+    footerBrandDesc: 'ربط المرضى بكبار الاستشاريين الأطباء في عمان، برلين، هايدلبرغ، وميونخ. ترجمة فورية بثلاث لغات بالذكاء الاصطناعي وعيادة افتراضية بتوقيت مزدوج.',
+    footerGdprNotice: 'مطابق للائحة حماية البيانات العامة GDPR وقوانين الخصوصية الصحية الأردنية',
+    footerAmmanHubTitle: 'مركز عمان الطبي 🇯🇴',
+    footerGermanHubTitle: 'المركز الطبي الألماني 🇩🇪',
+    footerPortalServicesTitle: 'خدمات البوابة الطبية',
+    noDoctorsInCorridorNotice: 'لا يوجد أطباء مسجلين بصفة فردية في هذا الممر حالياً. سيتم تحويل ملفك إلى قائمة انتظار المجلس الطبي المتخصص.'
   },
 
   de: {
@@ -1377,6 +1408,22 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     videoRateLabel: 'Honorar für Videosprechstunde (EUR €) *',
     experienceYearsLabel: 'Jahre klinischer Erfahrung *',
     doctorRegisterStepTitle: 'Registrierung von Facharztqualifikation & Schwerpunkten',
-    doctorRegisterSubtitle: 'Geben Sie Ihr Fachgebiet, Klinikanbindung und Ärztekammer-Nummer ein, um Ihr verifiziertes Facharztprofil zu erstellen.'
+    doctorRegisterSubtitle: 'Geben Sie Ihr Fachgebiet, Klinikanbindung und Ärztekammer-Nummer ein, um Ihr verifiziertes Facharztprofil zu erstellen.',
+    customSpecialtyLabel: 'Benutzerdefinierter Fachbereich / Subspezialisierung:',
+    customSpecialtyPlaceholder: 'Geben Sie Ihren speziellen Fachbereich ein...',
+    subSpecialtiesTitle: 'Subspezialisierungen & Klinischer Schwerpunkt',
+    addSubSpecialtyBtn: 'Subspezialisierung hinzufügen',
+    noSubSpecialtiesNotice: 'Noch keine Subspezialisierungen hinzugefügt. Klicken Sie auf + Subspezialisierung hinzufügen.',
+    medCertificatesTitle: 'Medizinische Zertifikate & Diplome',
+    uploadCertificateBtn: 'Zertifikat hochladen',
+    certUploadDesc: 'Laden Sie Facharztdiplome, Approbationen oder Zertifikate hoch, um sie auf Ihrem Profil anzuzeigen.',
+    noCertificatesNotice: 'Noch keine Zertifikate hinzugefügt. Klicken Sie auf + Zertifikat hochladen.',
+    addLanguageBtn: 'Sprache hinzufügen',
+    footerBrandDesc: 'Verbindung von Patienten mit führenden Fachärzten in Amman, Berlin, Heidelberg und München. Dreisprachige KI-Echtzeitübersetzung und duale Zeitzonen-Teleklinik.',
+    footerGdprNotice: 'DSGVO & jordanischen Datenschutzbestimmungen konform',
+    footerAmmanHubTitle: 'Medizinisches Zentrum Amman 🇯🇴',
+    footerGermanHubTitle: 'Deutsches Medizinisches Zentrum 🇩🇪',
+    footerPortalServicesTitle: 'Portal-Dienste',
+    noDoctorsInCorridorNotice: 'Derzeit sind keine einzelnen Fachärzte in diesem Korridor registriert. Ihr Fall wird dem medizinischen Ausschuss zugewiesen.'
   }
 };

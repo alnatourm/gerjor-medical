@@ -41,18 +41,18 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onNavigate }) => {
           </div>
 
           <p className="text-slate-400 leading-relaxed text-xs">
-            Connecting patients with premier medical specialists across Amman, Berlin, Heidelberg, and Munich. Real-time trilingual AI translation and dual timezone tele-clinic.
+            {t.footerBrandDesc}
           </p>
 
           <div className="flex items-center gap-2 pt-2 text-[11px] text-teal-400 font-medium">
             <ShieldCheck className="w-4 h-4 text-teal-400" />
-            <span>GDPR & Jordanian Health Privacy Compliant</span>
+            <span>{t.footerGdprNotice}</span>
           </div>
         </div>
 
         {/* Column 2: Amman Hub */}
         <div className="space-y-2">
-          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Amman Medical Hub 🇯🇴</h4>
+          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">{t.footerAmmanHubTitle}</h4>
           <p className="text-slate-400 text-xs">King Hussein Medical Center & Abdali Hospital Annex</p>
           <p className="text-slate-500 text-[11px]">Zahran Street, Abdali Medical District, Amman, Jordan</p>
           <p className="text-teal-400 font-mono text-[11px] pt-1">Tel: +962 6 500 9000</p>
@@ -60,7 +60,7 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onNavigate }) => {
 
         {/* Column 3: Germany Hub */}
         <div className="space-y-2">
-          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">German Medical Hub 🇩🇪</h4>
+          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">{t.footerGermanHubTitle}</h4>
           <p className="text-slate-400 text-xs">Charité Berlin & Heidelberg University Campus</p>
           <p className="text-slate-500 text-[11px]">Charitéplatz 1, 10117 Berlin / Im Neuenheimer Feld, Heidelberg</p>
           <p className="text-sky-400 font-mono text-[11px] pt-1">Tel: +49 30 2000 8000</p>
@@ -68,26 +68,26 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onNavigate }) => {
 
         {/* Column 4: Quick Portal Navigation */}
         <div className="space-y-2">
-          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Portal Services</h4>
+          <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">{t.footerPortalServicesTitle}</h4>
           <ul className="space-y-1.5 text-slate-300">
             <li>
-              <button onClick={() => onNavigate('doctors')} className="hover:text-teal-400 transition-colors">
-                Specialists Directory
+              <button onClick={() => onNavigate('home')} className="hover:text-teal-400 transition-colors">
+                {t.home}
               </button>
             </li>
             <li>
               <button onClick={() => onNavigate('virtual-clinic')} className="hover:text-teal-400 transition-colors">
-                Live Video Telehealth
+                {t.virtualClinic}
               </button>
             </li>
             <li>
               <button onClick={() => onNavigate('travel-guide')} className="hover:text-teal-400 transition-colors">
-                Medical Visa & Transfer Assistance
+                {t.travelVisa}
               </button>
             </li>
             <li>
               <button onClick={() => onNavigate('dashboard')} className="hover:text-teal-400 transition-colors">
-                Patient Medical Vault & Prescriptions
+                {t.myConsultations}
               </button>
             </li>
           </ul>
